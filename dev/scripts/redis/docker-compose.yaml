@@ -1,0 +1,77 @@
+version: '3'
+services:
+  redis-1:
+    networks:
+      - redis-net
+    image: redis
+    volumes:
+      - type: bind
+        source: ./cluster-config.conf
+        target: /usr/local/etc/redis/redis.conf
+    entrypoint: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+
+  redis-2:
+    networks:
+      - redis-net
+    image: redis
+    volumes:
+      - type: bind
+        source: ./cluster-config.conf
+        target: /usr/local/etc/redis/redis.conf
+    entrypoint: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+
+  redis-3:
+    networks:
+      - redis-net
+    image: redis
+    volumes:
+      - type: bind
+        source: ./cluster-config.conf
+        target: /usr/local/etc/redis/redis.conf
+    entrypoint: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+
+  redis-4:
+    networks:
+      - redis-net
+    image: redis
+    volumes:
+      - type: bind
+        source: ./cluster-config.conf
+        target: /usr/local/etc/redis/redis.conf
+    entrypoint: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+
+  redis-5:
+    networks:
+      - redis-net
+    image: redis
+    volumes:
+      - type: bind
+        source: ./cluster-config.conf
+        target: /usr/local/etc/redis/redis.conf
+    entrypoint: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+
+  redis-6:
+    networks:
+      - redis-net
+    image: redis
+    volumes:
+      - type: bind
+        source: ./cluster-config.conf
+        target: /usr/local/etc/redis/redis.conf
+    entrypoint: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+
+  redis-insight:
+    networks:
+      - redis-net
+    image: redislabs/redisinsight:latest
+    ports:
+      - "8001:8001"
+    volumes:
+      - redisinsight:/db
+
+volumes:
+  redisinsight:
+    driver: local
+networks:
+  redis-net:
+    driver: bridge

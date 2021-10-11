@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+option go_package = "github.com/open-exam/open-exam-backend/user-service/grpc-user-service;grpc_user_service";
+
+service UserService {
+    rpc findOne (FindOneRequest) returns (User) {};
+}
+
+message FindOneRequest {
+    string id = 1;
+    string email = 2;
+    bool password = 3;
+}
+
+message User {
+    string id = 1;
+    string email = 2;
+    uint32 type = 3;
+    string password = 4;
+}
