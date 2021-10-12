@@ -9,6 +9,10 @@ services:
         source: ./cluster-config.conf
         target: /usr/local/etc/redis/redis.conf
     entrypoint: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    deploy:
+      resources:
+        limits:
+          cpus: '0.001'
 
   redis-2:
     networks:
@@ -19,6 +23,10 @@ services:
         source: ./cluster-config.conf
         target: /usr/local/etc/redis/redis.conf
     entrypoint: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+    deploy:
+      resources:
+        limits:
+          cpus: '0.001'
 
   redis-3:
     networks:
@@ -29,6 +37,10 @@ services:
         source: ./cluster-config.conf
         target: /usr/local/etc/redis/redis.conf
     entrypoint: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+    deploy:
+      resources:
+        limits:
+          cpus: '0.001'
 
   redis-4:
     networks:
@@ -39,6 +51,10 @@ services:
         source: ./cluster-config.conf
         target: /usr/local/etc/redis/redis.conf
     entrypoint: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+    deploy:
+      resources:
+        limits:
+          cpus: '0.001'
 
   redis-5:
     networks:
@@ -49,6 +65,10 @@ services:
         source: ./cluster-config.conf
         target: /usr/local/etc/redis/redis.conf
     entrypoint: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+    deploy:
+      resources:
+        limits:
+          cpus: '0.001'
 
   redis-6:
     networks:
@@ -59,6 +79,10 @@ services:
         source: ./cluster-config.conf
         target: /usr/local/etc/redis/redis.conf
     entrypoint: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+    deploy:
+      resources:
+        limits:
+          cpus: '0.001'
 
   redis-insight:
     networks:
@@ -68,6 +92,10 @@ services:
       - "8001:8001"
     volumes:
       - redisinsight:/db
+    deploy:
+      resources:
+        limits:
+          cpus: '0.001'
 
 volumes:
   redisinsight:

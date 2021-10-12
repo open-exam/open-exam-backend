@@ -57,16 +57,52 @@ DROP TABLE IF EXISTS `exam_scopes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `exam_scopes` (
-  `exam_id` varchar(32) NOT NULL,
+  `exam_id` varchar(64) NOT NULL,
   `scope` bigint unsigned NOT NULL,
   `scope_type` int unsigned NOT NULL,
-  KEY `exam_scopes_exam_id_idx` (`exam_id`),
   KEY `exam_scopes_scope_custom_idx` (`scope`),
+  KEY `exam_scopes_exam_id_idx` (`exam_id`),
   CONSTRAINT `exam_scopes_exam_id` FOREIGN KEY (`exam_id`) REFERENCES `exams` (`id`),
   CONSTRAINT `exam_scopes_scope_custom` FOREIGN KEY (`scope`) REFERENCES `custom_teams_list` (`id`),
   CONSTRAINT `exam_scopes_scope_group` FOREIGN KEY (`scope`) REFERENCES `groups` (`id`),
   CONSTRAINT `exam_scopes_scope_org` FOREIGN KEY (`scope`) REFERENCES `organizations` (`id`),
   CONSTRAINT `exam_scopes_scope_team` FOREIGN KEY (`scope`) REFERENCES `teams` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `exam_template`
+--
+
+DROP TABLE IF EXISTS `exam_template`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `exam_template` (
+  `id` varchar(64) NOT NULL,
+  `name` varchar(128) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id_UNIQUE` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `exam_template_scopes`
+--
+
+DROP TABLE IF EXISTS `exam_template_scopes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `exam_template_scopes` (
+  `exam_template_id` varchar(64) NOT NULL,
+  `scope` bigint unsigned NOT NULL,
+  `scope_type` int unsigned NOT NULL,
+  KEY `exam_template_id_idx` (`exam_template_id`),
+  KEY `exam_template_scopes_org_idx` (`scope`),
+  CONSTRAINT `exam_template_id` FOREIGN KEY (`exam_template_id`) REFERENCES `exam_template` (`id`),
+  CONSTRAINT `exam_template_scopes_custom` FOREIGN KEY (`scope`) REFERENCES `custom_teams_list` (`id`),
+  CONSTRAINT `exam_template_scopes_group` FOREIGN KEY (`scope`) REFERENCES `groups` (`id`),
+  CONSTRAINT `exam_template_scopes_org` FOREIGN KEY (`scope`) REFERENCES `organizations` (`id`),
+  CONSTRAINT `exam_template_scopes_team` FOREIGN KEY (`scope`) REFERENCES `teams` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -78,7 +114,7 @@ DROP TABLE IF EXISTS `exams`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `exams` (
-  `id` varchar(32) NOT NULL,
+  `id` varchar(64) NOT NULL,
   `name` varchar(128) NOT NULL,
   `start_time` bigint unsigned NOT NULL,
   `end_time` bigint unsigned NOT NULL,
@@ -286,4 +322,4 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2021-10-11 15:22:22
+-- Dump completed on 2021-10-12 18:09:19
