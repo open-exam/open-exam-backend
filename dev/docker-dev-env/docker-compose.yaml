@@ -1,4 +1,5 @@
 version: '3'
+
 services:
   redis-1:
     networks:
@@ -12,7 +13,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.001'
+          cpus: 0.1
 
   redis-2:
     networks:
@@ -26,7 +27,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.001'
+          cpus: 0.1
 
   redis-3:
     networks:
@@ -40,7 +41,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.001'
+          cpus: 0.1
 
   redis-4:
     networks:
@@ -54,7 +55,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.001'
+          cpus: 0.1
 
   redis-5:
     networks:
@@ -68,7 +69,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.001'
+          cpus: 0.1
 
   redis-6:
     networks:
@@ -82,7 +83,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.001'
+          cpus: 0.1
 
   redis-insight:
     networks:
@@ -95,11 +96,33 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.001'
+          cpus: 0.1
+
+  db:
+    image: mysql
+    environment:
+      MYSQL_USER: open_exam
+      MYSQL_PASSWORD: open_exam
+      MYSQL_DATABASE: open_exam
+      MYSQL_ROOT_PASSWORD: open_exam
+    ports:
+      - "3306:3306"
+    volumes:
+      - db:/var/lib/mysql
+      - type: bind
+        source: ./../scripts/up.sql
+        target: /up.sql
+    deploy:
+      resources:
+        limits:
+          cpus: 0.1
 
 volumes:
   redisinsight:
     driver: local
+  db:
+    driver: local
+
 networks:
   redis-net:
     driver: bridge
