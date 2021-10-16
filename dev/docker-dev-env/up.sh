@@ -12,9 +12,12 @@ for ind in $(seq 1 6); do
   docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' docker-dev-env_redis-$ind\_1;
 done
 
-sleep 1s
+sleep 5s
 
-docker exec -it $(docker container ls  | grep 'docker-dev-env_db_1' | awk '{print $1}') sh -c 'mysql -u open_exam -popen_exam open_exam < /up.sql'
+mysql_ip=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' docker-dev-env_db_1)
 
-echo -n docker-dev-env_db_1 " "
-docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' docker-dev-env_db_1;
+connection_string="mysql -h $mysql_ip -u open_exam -popen_exam open_exam < /up.sql"
+
+docker exec -it "$(docker container ls  | grep 'docker-dev-env_db_1' | awk '{print $1}')" sh -c "$connection_string"
+
+echo -n docker-dev-env_db_1 " " "$mysql_ip"

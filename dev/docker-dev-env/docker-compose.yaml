@@ -13,7 +13,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: 0.1
+          cpus: 0.01
 
   redis-2:
     networks:
@@ -27,7 +27,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: 0.1
+          cpus: 0.01
 
   redis-3:
     networks:
@@ -41,7 +41,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: 0.1
+          cpus: 0.01
 
   redis-4:
     networks:
@@ -55,7 +55,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: 0.1
+          cpus: 0.01
 
   redis-5:
     networks:
@@ -69,7 +69,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: 0.1
+          cpus: 0.01
 
   redis-6:
     networks:
@@ -83,7 +83,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: 0.1
+          cpus: 0.01
 
   redis-insight:
     networks:
@@ -96,7 +96,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: 0.1
+          cpus: 0.01
 
   db:
     image: mysql
@@ -115,7 +115,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: 0.1
+          cpus: 0.5
 
 volumes:
   redisinsight:

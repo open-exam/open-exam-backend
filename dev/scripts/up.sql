@@ -1,10 +1,11 @@
+DROP DATABASE IF EXISTS `open_exam`;
 CREATE DATABASE  IF NOT EXISTS `open_exam` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `open_exam`;
 -- MySQL dump 10.13  Distrib 8.0.26, for Linux (x86_64)
 --
 -- Host: localhost    Database: open_exam
 -- ------------------------------------------------------
--- Server version	8.0.26-0ubuntu0.21.04.3
+-- Server version	8.0.26
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -50,6 +51,25 @@ CREATE TABLE `custom_teams_list` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `exam_client_access`
+--
+
+DROP TABLE IF EXISTS `exam_client_access`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `exam_client_access` (
+  `id` varchar(128) NOT NULL,
+  `user_id` varchar(64) NOT NULL,
+  `exam_id` varchar(64) NOT NULL,
+  `expiry` bigint NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id_UNIQUE` (`id`),
+  KEY `exam_id_idx` (`exam_id`),
+  CONSTRAINT `exam_id` FOREIGN KEY (`exam_id`) REFERENCES `exams` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `exam_scopes`
 --
 
@@ -65,7 +85,7 @@ CREATE TABLE `exam_scopes` (
   CONSTRAINT `exam_scopes_exam_id` FOREIGN KEY (`exam_id`) REFERENCES `exams` (`id`),
   CONSTRAINT `exam_scopes_scope_custom` FOREIGN KEY (`scope`) REFERENCES `custom_teams_list` (`id`),
   CONSTRAINT `exam_scopes_scope_group` FOREIGN KEY (`scope`) REFERENCES `groups` (`id`),
-  CONSTRAINT `exam_scopes_scope_org` FOREIGN KEY (`scope`) REFERENCES `organizations` (`id`),
+  CONSTRAINT `exam_scopes_scope_org` FOREIGN KEY (`scope`) REFERENCES `organisations` (`id`),
   CONSTRAINT `exam_scopes_scope_team` FOREIGN KEY (`scope`) REFERENCES `teams` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -101,7 +121,7 @@ CREATE TABLE `exam_template_scopes` (
   CONSTRAINT `exam_template_id` FOREIGN KEY (`exam_template_id`) REFERENCES `exam_template` (`id`),
   CONSTRAINT `exam_template_scopes_custom` FOREIGN KEY (`scope`) REFERENCES `custom_teams_list` (`id`),
   CONSTRAINT `exam_template_scopes_group` FOREIGN KEY (`scope`) REFERENCES `groups` (`id`),
-  CONSTRAINT `exam_template_scopes_org` FOREIGN KEY (`scope`) REFERENCES `organizations` (`id`),
+  CONSTRAINT `exam_template_scopes_org` FOREIGN KEY (`scope`) REFERENCES `organisations` (`id`),
   CONSTRAINT `exam_template_scopes_team` FOREIGN KEY (`scope`) REFERENCES `teams` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -116,11 +136,16 @@ DROP TABLE IF EXISTS `exams`;
 CREATE TABLE `exams` (
   `id` varchar(64) NOT NULL,
   `name` varchar(128) NOT NULL,
-  `start_time` bigint unsigned NOT NULL,
-  `end_time` bigint unsigned NOT NULL,
+  `start_time` bigint NOT NULL,
+  `end_time` bigint NOT NULL,
   `duration` int NOT NULL,
+  `template` varchar(64) NOT NULL,
+  `created_by` varchar(64) NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`)
+  UNIQUE KEY `id_UNIQUE` (`id`),
+  KEY `exams_template_idx` (`template`),
+  CONSTRAINT `exams_created_by` FOREIGN KEY (`id`) REFERENCES `users` (`id`),
+  CONSTRAINT `exams_linked_template` FOREIGN KEY (`template`) REFERENCES `exam_template` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -138,7 +163,7 @@ CREATE TABLE `groups` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `id_UNIQUE` (`id`),
   KEY `org_id_idx` (`org_id`),
-  CONSTRAINT `org_id` FOREIGN KEY (`org_id`) REFERENCES `organizations` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT `org_id` FOREIGN KEY (`org_id`) REFERENCES `organisations` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -159,13 +184,13 @@ CREATE TABLE `operations` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `organizations`
+-- Table structure for table `organisations`
 --
 
-DROP TABLE IF EXISTS `organizations`;
+DROP TABLE IF EXISTS `organisations`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `organizations` (
+CREATE TABLE `organisations` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(128) NOT NULL,
   PRIMARY KEY (`id`),
@@ -185,6 +210,7 @@ CREATE TABLE `question_bank` (
   `title` varchar(64) NOT NULL,
   `display_data` json NOT NULL,
   `answer_data` json NOT NULL,
+  `files` json NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id_UNIQUE` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -205,7 +231,7 @@ CREATE TABLE `question_bank_scopes` (
   KEY `question_bank_scopes_id` (`question_bank_id`),
   CONSTRAINT `question_bank_scopes_group` FOREIGN KEY (`scope`) REFERENCES `groups` (`id`),
   CONSTRAINT `question_bank_scopes_id` FOREIGN KEY (`question_bank_id`) REFERENCES `question_bank` (`id`),
-  CONSTRAINT `question_bank_scopes_org` FOREIGN KEY (`scope`) REFERENCES `organizations` (`id`),
+  CONSTRAINT `question_bank_scopes_org` FOREIGN KEY (`scope`) REFERENCES `organisations` (`id`),
   CONSTRAINT `question_bank_scopes_team` FOREIGN KEY (`scope`) REFERENCES `teams` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -253,8 +279,28 @@ CREATE TABLE `roles` (
   CONSTRAINT `custom_id_r` FOREIGN KEY (`item_id`) REFERENCES `custom_teams_list` (`id`),
   CONSTRAINT `group_id_r` FOREIGN KEY (`item_id`) REFERENCES `groups` (`id`),
   CONSTRAINT `oper_id_r` FOREIGN KEY (`id`) REFERENCES `operations` (`id`),
-  CONSTRAINT `org_id_r` FOREIGN KEY (`item_id`) REFERENCES `organizations` (`id`),
+  CONSTRAINT `org_id_r` FOREIGN KEY (`item_id`) REFERENCES `organisations` (`id`),
   CONSTRAINT `team_id_r` FOREIGN KEY (`item_id`) REFERENCES `teams` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `standard_users`
+--
+
+DROP TABLE IF EXISTS `standard_users`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `standard_users` (
+  `user_id` varchar(64) NOT NULL,
+  `scope` bigint unsigned NOT NULL,
+  `scope_type` int unsigned NOT NULL,
+  KEY `standard_users_user_id_idx` (`user_id`),
+  KEY `standard_users_scope_organisations_idx` (`scope`),
+  CONSTRAINT `standard_users_scope_groups` FOREIGN KEY (`scope`) REFERENCES `groups` (`id`),
+  CONSTRAINT `standard_users_scope_organisations` FOREIGN KEY (`scope`) REFERENCES `organisations` (`id`),
+  CONSTRAINT `standard_users_scope_teams` FOREIGN KEY (`scope`) REFERENCES `teams` (`id`),
+  CONSTRAINT `standard_users_user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -322,4 +368,4 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2021-10-12 18:09:19
+-- Dump completed on 2021-10-16 17:48:25
