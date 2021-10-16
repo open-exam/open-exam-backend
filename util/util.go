@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"strings"
 )
 
 func GetId(size int) string {
@@ -50,4 +51,10 @@ func GetSHA256(data []byte) string {
 	h := sha256.New()
 	h.Write(data)
 	return hex.EncodeToString(h.Sum(nil))
+}
+
+func SplitAndParse(data string) []string {
+	return Map(strings.Split(data, ","), func(item string) string {
+		return strings.TrimSpace(item)
+	})
 }
