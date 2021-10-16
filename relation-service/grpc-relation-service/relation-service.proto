@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option go_package = "github.com/open-exam/open-exam-backend/relation-service/grpc-relation-service;grpc_relation_service";
+
+service RelationService {
+    rpc findExamOrganisation (StandardIdRequest) returns (StandardIdResponse) {};
+}
+
+message StandardIdRequest {
+    uint64 idInt = 1;
+    string idString = 2;
+}
+
+message StandardIdResponse {
+    uint64 idInt = 1;
+    string idString = 2;
+}
