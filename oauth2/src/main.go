@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	"github.com/golang-jwt/jwt"
-	"github.com/joho/godotenv"
+	"github.com/open-exam/open-exam-backend/shared"
 	pb "github.com/open-exam/open-exam-backend/user-service/grpc-user-service"
 	"github.com/open-exam/open-exam-backend/util"
 	"golang.org/x/crypto/argon2"
@@ -62,19 +62,14 @@ type tokenSet struct {
 
 func main() {
 
-	if len(os.Args) > 1 && len(os.Args[1]) > 0 {
-		mode = os.Args[1]
-	}
-
-	if err := godotenv.Load("." + mode + ".env"); err != nil {
-		log.Fatalf("Error loading .env file")
-	}
+	shared.SetEnv(&mode)
 
 	listenAddr := os.Getenv("listen_addr")
 
 	validateOptions()
 
-	router := gin.Default()
+	router := gin.New()
+	router.Use(gin.Recovery())
 
 	router.GET("/authorize", authorize)
 	router.GET("/token", getToken)
@@ -107,9 +102,7 @@ func validateOptions() {
 		log.Fatalf("invalid jwt_public_key")
 	}
 
-	redisAddrs := util.Map(strings.Split(os.Getenv("redis_addrs"), ","), func(item string) string {
-		return strings.TrimSpace(item)
-	})
+	redisAddrs := util.SplitAndParse(os.Getenv("redis_addrs"))
 	redisPassword := os.Getenv("redis_pass")
 
 	redisCluster = redis.NewClusterClient(&redis.ClusterOptions{
@@ -168,6 +161,8 @@ func authorize(ctx *gin.Context) {
 			Email: username,
 			Password: true,
 		})
+
+		defer conn.Close()
 
 		if err != nil {
 			ctx.JSON(500, errServiceConnection)
