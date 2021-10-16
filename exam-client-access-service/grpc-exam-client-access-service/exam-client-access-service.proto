@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+option go_package = "github.com/open-exam/open-exam-backend/exam-client-access-service/grpc-exam-client-access-service;grpc_exam_client_access_service";
+
+service ExamClientAccess {
+    rpc checkValid (CheckValidRequest) returns (CheckValidResponse) {};
+    rpc expireKeys (ExpireKeysRequest) returns (StandardValidResponse) {};
+    rpc batchAddKeys (stream BatchAddKeysRequest) returns (StandardValidResponse) {};
+}
+
+message CheckValidRequest {
+    string id = 1;
+}
+
+message CheckValidResponse {
+    bool status = 1;
+    string userId = 2;
+    string examId = 3;
+    int64 expiry = 4;
+}
+
+message StandardValidResponse {
+    bool status = 1;
+    string message = 2;
+}
+
+message ExpireKeysRequest {
+    string examId = 1;
+    uint64 expireTime = 2;
+}
+
+message BatchAddKeysRequest {
+    string userId = 1;
+    string examId = 2;
+    uint64 expireTime = 3;
+}
