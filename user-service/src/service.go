@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"database/sql"
+	_ "database/sql"
 	"errors"
 	pb "github.com/open-exam/open-exam-backend/user-service/grpc-user-service"
 )
@@ -17,13 +17,13 @@ func NewServer() (*Server, error) {
 
 func (s *Server) FindOne(ctx context.Context, req *pb.FindOneRequest) (*pb.User, error) {
 	if len(req.Id) != 0 {
-		user, err := getUser(db, 0, req.Id, req.Password)
+		user, err := getUser(0, req.Id, req.Password)
 		if err != nil {
 			return nil, err
 		}
 		return user, nil
 	} else if len(req.Email) != 0 {
-		user, err := getUser(db, 1, req.Email, req.Password)
+		user, err := getUser(1, req.Email, req.Password)
 		if err != nil {
 			return nil, err
 		}
@@ -32,7 +32,7 @@ func (s *Server) FindOne(ctx context.Context, req *pb.FindOneRequest) (*pb.User,
 	return nil, errors.New("id or email not given")
 }
 
-func getUser(db *sql.DB, mode int, data string, getPass bool) (*pb.User, error) {
+func getUser(mode int, data string, getPass bool) (*pb.User, error) {
 	user := &pb.User{}
 
 	query := "SELECT id, email, type"
