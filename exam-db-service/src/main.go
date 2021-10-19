@@ -2,7 +2,7 @@ package main
 
 import (
 	"database/sql"
-	pb "github.com/open-exam/open-exam-backend/exam-client-access-service/grpc-exam-client-access-service"
+	pb "github.com/open-exam/open-exam-backend/exam-db-service/grpc-exam-db-service"
 	"github.com/open-exam/open-exam-backend/shared"
 	"google.golang.org/grpc"
 )
