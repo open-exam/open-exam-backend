@@ -2,16 +2,15 @@ syntax = "proto3";
 
 option go_package = "github.com/open-exam/open-exam-backend/relation-service/grpc-relation-service;grpc_relation_service";
 
+import "shared.proto";
+
 service RelationService {
-    rpc findExamOrganisation (StandardIdRequest) returns (StandardIdResponse) {};
+    rpc findExamorganization (StandardIdRequest) returns (StandardIdResponse) {};
+    rpc hasAccess (HasAccessRequest) returns (StandardValidResponse) {};
 }
 
-message StandardIdRequest {
-    uint64 idInt = 1;
-    string idString = 2;
-}
-
-message StandardIdResponse {
-    uint64 idInt = 1;
-    string idString = 2;
+message HasAccessRequest {
+    string examId = 1;
+    string userId = 2;
+    bool verifyTime = 3;
 }
