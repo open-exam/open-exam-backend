@@ -11,7 +11,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/golang-jwt/jwt"
 	"github.com/open-exam/open-exam-backend/shared"
-	pb "github.com/open-exam/open-exam-backend/user-service/grpc-user-service"
+	pb "github.com/open-exam/open-exam-backend/user-db-service/grpc-user-db-service"
 	"github.com/open-exam/open-exam-backend/util"
 	"golang.org/x/crypto/argon2"
 	"google.golang.org/grpc"
@@ -149,7 +149,7 @@ func authorize(ctx *gin.Context) {
 	}
 
 	if len(username) > 0 && len(passwd) > 0 && len(codeChallenge) > 0 {
-		conn, err := grpc.Dial("user-service:" + userService, grpc.WithInsecure())
+		conn, err := grpc.Dial("user-db-service:" + userService, grpc.WithInsecure())
 		if err != nil {
 			defer conn.Close()
 			ctx.JSON(500, errServiceConnection)

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/open-exam/open-exam-backend/user-service/grpc-user-service;grpc_user_service";
+option go_package = "github.com/open-exam/open-exam-backend/user-db-service/grpc-user-db-service;grpc_user_db_service";
 
 service UserService {
     rpc findOne (FindOneRequest) returns (User) {};

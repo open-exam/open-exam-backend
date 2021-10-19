@@ -34,7 +34,7 @@ func DefaultGrpcServer (db *sql.DB, registerComponents func(*grpc.Server)) {
 		listenAddr = os.Getenv("listen_addr")
 	)
 
-	log.Println("user-service starting...")
+	log.Println("user-db-service starting...")
 
 	dbAddr := net.JoinHostPort(dbHost, dbPort)
 	dbConfig := mysql.Config{
@@ -69,7 +69,7 @@ func DefaultGrpcServer (db *sql.DB, registerComponents func(*grpc.Server)) {
 	grpcServer := grpc.NewServer()
 
 	hs := health.NewServer()
-	hs.SetServingStatus("grpc.health.v1.user-service", 1)
+	hs.SetServingStatus("grpc.health.v1.user-db-service", 1)
 	healthpb.RegisterHealthServer(grpcServer, hs)
 
 	registerComponents(grpcServer)

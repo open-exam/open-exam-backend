@@ -4,7 +4,7 @@ WORKDIR /open-exam-backend
 RUN go mod download
 RUN go mod tidy
 WORKDIR /open-exam-backend/user-service
-RUN CGO_ENABLED=0 go build -o user-service -a -ldflags '-extldflags "-static"' src/*.go
+RUN CGO_ENABLED=0 go build -o user-db-service -a -ldflags '-extldflags "-static"' src/*.go
 
 # Bundle Stage
 FROM alpine
