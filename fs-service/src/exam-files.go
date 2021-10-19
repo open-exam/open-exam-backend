@@ -3,7 +3,8 @@ package main
 import (
 	"context"
 	"github.com/gin-gonic/gin"
-	examClientPb "github.com/open-exam/open-exam-backend/exam-client-access-service/grpc-exam-client-access-service"
+	examPb "github.com/open-exam/open-exam-backend/exam-db-service/grpc-exam-db-service"
+	sharedPb "github.com/open-exam/open-exam-backend/grpc-shared"
 	relationPb "github.com/open-exam/open-exam-backend/relation-service/grpc-relation-service"
 	"github.com/open-exam/open-exam-backend/shared"
 	"github.com/open-exam/open-exam-backend/util"
@@ -15,8 +16,8 @@ var (
 		"error": "an unknown error occurred",
 	}
 	platforms []string
-	arch []string
-	examClientAccessService string
+	arch            []string
+	examDbService   string
 	relationService string
 	clientName string
 )
@@ -28,7 +29,7 @@ type GetClient struct {
 }
 
 func InitExamFiles(router *gin.RouterGroup) {
-	router.GET("/exam-client", getExamClient)
+	router.GET("/client", getExamClient)
 }
 
 func getExamClient(ctx *gin.Context) {
@@ -56,15 +57,15 @@ func getExamClient(ctx *gin.Context) {
 			return
 		}
 
-		conn, err := shared.GetGrpcConn("exam-client-access-service:" + examClientAccessService)
+		conn, err := shared.GetGrpcConn("exam-db-service:" + examDbService)
 
 		if err != nil {
 			ctx.JSON(500, errServiceConnection)
 			return
 		}
 
-		client := examClientPb.NewExamClientAccessClient(conn)
-		res, err := client.CheckValid(context.Background(), &examClientPb.CheckValidRequest{
+		client := examPb.NewExamClientAccessClient(conn)
+		res, err := client.CheckValid(context.Background(), &examPb.CheckValidRequest{
 			Id: getClient.AccessId,
 		})
 
@@ -82,7 +83,16 @@ func getExamClient(ctx *gin.Context) {
 			return
 		}
 
-		orgId, err := getOrgFromExam(res.ExamId)
+		conn, err = shared.GetGrpcConn("relation-service:" + relationService)
+		if err != nil {
+			ctx.JSON(500, errServiceConnection)
+			return
+		}
+
+		relationClient := relationPb.NewRelationServiceClient(conn)
+		orgId, err := GetOrgFromExam(relationClient, res.ExamId)
+
+		defer conn.Close()
 
 		if err != nil {
 			ctx.JSON(500, unknownError)
@@ -91,20 +101,14 @@ func getExamClient(ctx *gin.Context) {
 
 		// TODO: perform any bit manipulation
 
-		ctx.File("/app-data/" + strconv.FormatUint(orgId, 10) + "/client-files/" + res.ExamId + "/" + clientName + "_" + getClient.Arch + getExtension(getClient.Platform))
+		ctx.File("/app-data/exam-files/" + strconv.FormatUint(orgId, 10) + "/" + res.ExamId + "/" + clientName + "_" + getClient.Arch + getExtension(getClient.Platform))
 	} else {
 		ctx.JSON(500, unknownError)
 	}
 }
 
-func getOrgFromExam(examId string) (uint64, error) {
-	conn, err := shared.GetGrpcConn("relation-service:" + relationService)
-	if err != nil {
-		return 0, err
-	}
-
-	client := relationPb.NewRelationServiceClient(conn)
-	res, err := client.FindExamOrganisation(context.Background(), &relationPb.StandardIdRequest{
+func GetOrgFromExam(client relationPb.RelationServiceClient, examId string) (uint64, error) {
+	res, err := client.FindExamorganization(context.Background(), &sharedPb.StandardIdRequest{
 		IdString: examId,
 	})
 

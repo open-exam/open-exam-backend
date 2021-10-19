@@ -26,7 +26,9 @@ func main() {
 	router := gin.New()
 	router.Use(gin.Recovery())
 
-	InitExamFiles(router.Group("/test-files"))
+	InitExamFiles(router.Group("/exam-files"))
+	InitExamLog(router.Group("/exam-log"))
+	InitQuestionFiles(router.Group("/question-files"))
 
 	if err := router.Run(listenAddr); err != nil {
 		log.Fatalf("failed to start oauth2 server: %v", err)
@@ -36,7 +38,7 @@ func main() {
 func validateOptions() {
 	platforms = util.SplitAndParse(os.Getenv("platforms"))
 
-	examClientAccessService = os.Getenv("exam_client_access_service")
+	examDbService = os.Getenv("exam_db_service")
 
 	relationService = os.Getenv("relation_service")
 

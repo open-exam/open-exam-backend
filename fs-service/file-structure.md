@@ -1,20 +1,19 @@
 # File system structure
 
 * Root is /app-data
-* Each organisation is a separate kubernetes storage class 
+* Each organization_id folder is a separate kubernetes volume
 <pre>
 .
-├── organisation_id
-    │
-    ├── client-files
-    │    ├── exam_id
-    │        ├── client files
-    │
-    ├── exam-logs
-    │    ├── exam_id
-    │        ├── user_id.log
-    │
-    ├── questions
-        ├── question_id
-            ├── files
+├── exam-files
+│   ├── organization_id
+│       ├── exam_id
+│             ├── client files
+├── exam-logs
+│   ├── organization_id
+│        ├── exam_id
+│             ├── user_id.log
+├── questions
+│   ├── organization_id
+│        ├── question_id
+│             ├── files
 </pre>
