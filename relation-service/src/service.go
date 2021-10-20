@@ -17,7 +17,8 @@ func NewServer() (*Server, error) {
 	return &Server{}, nil
 }
 
-func (s *Server) FindExamorganization(ctx *context.Context, req *sharedPb.StandardIdRequest) (*sharedPb.StandardIdResponse, error) {
+func (s *Server) FindExamOrganization(ctx context.Context, req *sharedPb.StandardIdRequest) (*sharedPb.
+	StandardIdResponse, error) {
 	var (
 		scope     uint64
 		scopeType uint
@@ -53,7 +54,7 @@ func (s *Server) FindExamorganization(ctx *context.Context, req *sharedPb.Standa
 					rows = db.QueryRow("SELECT org_id FROM `groups` WHERE id=?", scope)
 				}
 				case 2: {
-						rows = db.QueryRow("SELECT org_id FROM `groups` INNER JOIN teams ON teams.group_id = `groups`.id WHERE teams.id=?", scope)
+					rows = db.QueryRow("SELECT org_id FROM `groups` INNER JOIN teams ON teams.group_id = `groups`.id WHERE teams.id=?", scope)
 				}
 				case 3: {
 					return nil, errors.New("maps to a custom_team")
@@ -69,7 +70,7 @@ func (s *Server) FindExamorganization(ctx *context.Context, req *sharedPb.Standa
 	return nil, errors.New("id not given")
 }
 
-func (s *Server) HasAccess(ctx *context.Context, req *pb.HasAccessRequest) (*sharedPb.StandardValidResponse, error) {
+func (s *Server) HasAccess(ctx context.Context, req *pb.HasAccessRequest) (*sharedPb.StandardValidResponse, error) {
 	if len(req.ExamId) == 0 || len(req.UserId) == 0 {
 		return nil, errors.New("invalid request")
 	}

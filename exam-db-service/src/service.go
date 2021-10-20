@@ -15,7 +15,7 @@ func NewServer() (*Server, error) {
 	return &Server {}, nil
 }
 
-func (s *Server) CheckValid(ctx *context.Context, req *pb.CheckValidRequest) (*pb.CheckValidResponse, error) {
+func (s *Server) CheckValid(ctx context.Context, req *pb.CheckValidRequest) (*pb.CheckValidResponse, error) {
 	res := &pb.CheckValidResponse{}
 	var id string
 

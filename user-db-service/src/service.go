@@ -15,7 +15,7 @@ func NewServer() (*Server, error) {
 	return &Server{}, nil
 }
 
-func (s *Server) FindOne(ctx *context.Context, req *pb.FindOneRequest) (*pb.User, error) {
+func (s *Server) FindOne(ctx context.Context, req *pb.FindOneRequest) (*pb.User, error) {
 	if len(req.Id) != 0 {
 		user, err := getUser(0, req.Id, req.Password)
 		if err != nil {
