@@ -6,8 +6,8 @@ import "shared.proto";
 
 service ExamClientAccess {
     rpc checkValid (CheckValidRequest) returns (CheckValidResponse) {};
-    rpc expireKeys (ExpireKeysRequest) returns (StandardValidResponse) {};
-    rpc batchAddKeys (stream BatchAddKeysRequest) returns (StandardValidResponse) {};
+    rpc expireKeys (ExpireKeysRequest) returns (StandardStatusResponse) {};
+    rpc batchAddKeys (stream BatchAddKeysRequest) returns (StandardStatusResponse) {};
 }
 
 service ExamService {

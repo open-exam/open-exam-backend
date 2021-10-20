@@ -50,13 +50,13 @@ func (s *Server) FindExamOrganization(ctx context.Context, req *sharedPb.Standar
 				}
 
 				switch scopeType {
-				case 1: {
+				case 2: {
 					rows = db.QueryRow("SELECT org_id FROM `groups` WHERE id=?", scope)
 				}
-				case 2: {
+				case 3: {
 					rows = db.QueryRow("SELECT org_id FROM `groups` INNER JOIN teams ON teams.group_id = `groups`.id WHERE teams.id=?", scope)
 				}
-				case 3: {
+				case 4: {
 					return nil, errors.New("maps to a custom_team")
 				}
 				}
@@ -70,7 +70,7 @@ func (s *Server) FindExamOrganization(ctx context.Context, req *sharedPb.Standar
 	return nil, errors.New("id not given")
 }
 
-func (s *Server) HasAccess(ctx context.Context, req *pb.HasAccessRequest) (*sharedPb.StandardValidResponse, error) {
+func (s *Server) HasAccess(ctx context.Context, req *pb.HasAccessRequest) (*sharedPb.StandardStatusResponse, error) {
 	if len(req.ExamId) == 0 || len(req.UserId) == 0 {
 		return nil, errors.New("invalid request")
 	}
@@ -93,11 +93,11 @@ func (s *Server) HasAccess(ctx context.Context, req *pb.HasAccessRequest) (*shar
 		return nil, err
 	}
 
-	fillScope := func() (*sharedPb.StandardValidResponse, error) {
-		falseRes := &sharedPb.StandardValidResponse {
+	fillScope := func() (*sharedPb.StandardStatusResponse, error) {
+		falseRes := &sharedPb.StandardStatusResponse {
 			Status: false,
 		}
-		res := &sharedPb.StandardValidResponse {
+		res := &sharedPb.StandardStatusResponse {
 			Status: scope == teamId,
 		}
 
@@ -121,10 +121,10 @@ func (s *Server) HasAccess(ctx context.Context, req *pb.HasAccessRequest) (*shar
 	}
 
 	switch scopeType {
-	case 0: {
+	case 1: {
 		rows = db.QueryRow("SELECT tm.id FROM teams tm WHERE tm.id=? AND tm.group_id IN(SELECT gr.id FROM `groups` gr WHERE gr.org_id=?)", teamId, scope)
 	}
-	case 1: {
+	case 2: {
 		rows = db.QueryRow("SELECT id FROM teams WHERE group_id=?", scope)
 	}
 	}

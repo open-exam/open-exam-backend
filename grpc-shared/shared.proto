@@ -2,7 +2,7 @@ syntax = "proto3";
 
 option go_package = "github.com/open-exam/open-exam-backend/grpc-shared;shared";
 
-message StandardValidResponse {
+message StandardStatusResponse {
     bool status = 1;
     string message = 2;
 }

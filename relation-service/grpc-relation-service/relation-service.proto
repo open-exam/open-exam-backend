@@ -6,7 +6,7 @@ import "shared.proto";
 
 service RelationService {
     rpc findExamorganization (StandardIdRequest) returns (StandardIdResponse) {};
-    rpc hasAccess (HasAccessRequest) returns (StandardValidResponse) {};
+    rpc hasAccess (HasAccessRequest) returns (StandardStatusResponse) {};
 }
 
 message HasAccessRequest {
