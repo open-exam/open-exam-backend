@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+option go_package = "github.com/open-exam/open-exam-backend/rbac-service/grpc-rbac-service;grpc_rbac_service";
+
+import "shared.proto";
+
+service RbacService {
+    rpc canPerformOperation (CanPerformOperationRequest) returns (StandardStatusResponse) {};
+    rpc giveRole (GiveRoleRequest) returns (StandardStatusResponse) {};
+    rpc doesRoleExist (RoleExistRequest) returns (RoleExistResponse) {};
+    rpc revokeRole (GiveRoleRequest) returns (StandardStatusResponse) {};
+}
+
+message CanPerformOperationRequest {
+    string userId = 1;
+    uint64 operationId = 2;
+    string resource = 3;
+    string operation = 4;
+    uint64 scope = 5;
+}
+
+message GiveRoleRequest {
+    string userId = 1;
+    uint64 operationId = 2;
+    uint64 scope = 3;
+    uint32 scopeType = 4;
+}
+
+message RoleExistRequest {
+    string operation = 2;
+    string resource = 3;
+}
+
+message RoleExistResponse {
+    bool status = 1;
+    uint64 operationId = 2;
+}
