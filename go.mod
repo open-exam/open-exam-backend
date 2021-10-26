@@ -12,21 +12,7 @@ require (
 	google.golang.org/grpc v1.41.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
-	github.com/open-exam/open-exam-backend/grpc-shared v0.0.0
-	github.com/open-exam/open-exam-backend/exam-db-service/grpc-exam-db-service v0.0.0
-	github.com/open-exam/open-exam-backend/rbac-service/grpc-rbac-service v0.0.0
-	github.com/open-exam/open-exam-backend/user-db-service/grpc-user-db-service v0.0.0
-	github.com/open-exam/open-exam-backend/relation-service/grpc-relation-service v0.0.0
 )
-
-replace (
-	github.com/open-exam/open-exam-backend/grpc-shared => ./grpc-shared
-	github.com/open-exam/open-exam-backend/exam-db-service/grpc-exam-db-service => ./exam-db-service/grpc-exam-db-service
-	github.com/open-exam/open-exam-backend/rbac-service/grpc-rbac-service => ./rbac-service/grpc-rbac-service
-	github.com/open-exam/open-exam-backend/user-db-service/grpc-user-db-service => ./user-db-service/grpc-user-db-service
-	github.com/open-exam/open-exam-backend/relation-service/grpc-relation-service => ./relation-service/grpc-relation-service
-)
-
 require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
