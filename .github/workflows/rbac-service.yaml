@@ -7,7 +7,7 @@ on:
       - ".github/workflows/rbac-service.yaml"
 
 jobs:
-  build & test:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repository
