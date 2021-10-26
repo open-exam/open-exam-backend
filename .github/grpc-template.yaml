@@ -27,7 +27,7 @@ jobs:
         with:
           protoc-version: '3.12.4'
       - name: Build proto files
-        run: go run dev/scripts/proto.go -in="{{ROUTE}}"
+        run: go run dev/scripts/proto.go -all
       - name: Build
         run: |-
           cd {{ROUTE}}/src
