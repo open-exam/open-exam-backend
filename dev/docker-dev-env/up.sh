@@ -20,4 +20,4 @@ connection_string="mysql -h $mysql_ip -u open_exam -popen_exam open_exam < /up.s
 
 docker exec -it "$(docker container ls  | grep 'docker-dev-env_db_1' | awk '{print $1}')" sh -c "$connection_string"
 
-echo -n docker-dev-env_db_1 " " "$mysql_ip"
+echo docker-dev-env_db_1 " " "$mysql_ip"
