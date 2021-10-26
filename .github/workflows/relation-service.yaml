@@ -1,0 +1,33 @@
+name: "relation-service"
+
+on:
+  push:
+    paths:
+      - "routes/relation-service/**"
+      - ".github/workflows/relation-service.yaml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.17'
+      - name: Install deps
+        run: |-
+          go download
+          go mod tidy
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.26
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1
+      - name: Install protoc
+        uses: abelfodil/protoc-action@v1
+        with:
+          protoc-version: '3.12.4'
+      - name: Build proto files
+        run: go run dev/scripts/proto.go -in="relation-service"
+      - name: Build
+        run: |-
+          cd routes/relation-service/src
+          go build *
