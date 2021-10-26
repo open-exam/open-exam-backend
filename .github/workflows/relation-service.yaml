@@ -30,5 +30,5 @@ jobs:
         run: go run dev/scripts/proto.go -in="relation-service"
       - name: Build
         run: |-
-          cd routes/relation-service/src
+          cd relation-service/src
           go build *
