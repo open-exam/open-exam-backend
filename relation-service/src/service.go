@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"time"
 
@@ -19,49 +20,18 @@ func NewServer() (*Server, error) {
 
 func (s *Server) FindExamOrganization(ctx context.Context, req *sharedPb.StandardIdRequest) (*sharedPb.
 	StandardIdResponse, error) {
-	var (
-		scope     uint64
-		scopeType uint
-	)
+	var scope uint64
 
 	if len(req.IdString) != 0 {
-		rows := db.QueryRow("SELECT scope, scope_type FROM standard_users INNER JOIN exams ON standard_users.user_id = exams.created_by WHERE exams.id=? ORDER BY standard_users.scope_type", req.IdString)
+		rows := db.QueryRow("SELECT org FROM exams where id=?", req.IdString)
 		if rows.Err() != nil {
 			return nil, rows.Err()
 		}
 
-		if err := rows.Scan(&scope, &scopeType); err == nil {
-			if scopeType == 0 {
-				return &sharedPb.StandardIdResponse{
-					IdInt: scope,
-				}, nil
-			} else {
-
-				fillScope := func() (*sharedPb.StandardIdResponse, error) {
-					if rows.Err() != nil {
-						return nil, rows.Err()
-					}
-					if err := rows.Scan(&scope); err == nil {
-						return &sharedPb.StandardIdResponse{
-							IdInt: scope,
-						}, nil
-					}
-					return nil, err
-				}
-
-				switch scopeType {
-				case 2: {
-					rows = db.QueryRow("SELECT org_id FROM `groups` WHERE id=?", scope)
-				}
-				case 3: {
-					rows = db.QueryRow("SELECT org_id FROM `groups` INNER JOIN teams ON teams.group_id = `groups`.id WHERE teams.id=?", scope)
-				}
-				case 4: {
-					return nil, errors.New("maps to a custom_team")
-				}
-				}
-				return fillScope()
-			}
+		if err := rows.Scan(&scope); err == nil {
+			return &sharedPb.StandardIdResponse{
+				IdInt: scope,
+			}, nil
 		} else {
 			return nil, err
 		}
@@ -70,7 +40,7 @@ func (s *Server) FindExamOrganization(ctx context.Context, req *sharedPb.Standar
 	return nil, errors.New("id not given")
 }
 
-func (s *Server) HasAccess(ctx context.Context, req *pb.HasAccessRequest) (*sharedPb.StandardStatusResponse, error) {
+func (s *Server) CanAccessExam(ctx context.Context, req *pb.CanAccessExamRequest) (*sharedPb.StandardStatusResponse, error) {
 	if len(req.ExamId) == 0 || len(req.UserId) == 0 {
 		return nil, errors.New("invalid request")
 	}
@@ -121,12 +91,77 @@ func (s *Server) HasAccess(ctx context.Context, req *pb.HasAccessRequest) (*shar
 	}
 
 	switch scopeType {
-	case 1: {
+	case 3: {
 		rows = db.QueryRow("SELECT tm.id FROM teams tm WHERE tm.id=? AND tm.group_id IN(SELECT gr.id FROM `groups` gr WHERE gr.org_id=?)", teamId, scope)
 	}
-	case 2: {
+	case 4: {
 		rows = db.QueryRow("SELECT id FROM teams WHERE group_id=?", scope)
 	}
 	}
 	return fillScope()
+}
+
+
+func (s *Server) CanAccessScope(ctx context.Context, req *pb.CanAccessScopeRequest) (*sharedPb.StandardStatusResponse, error) {
+	
+	if len(req.UserId) == 0 || req.Scope == 0 {
+		return nil, errors.New("invalid request")
+	}
+
+	var (
+		scope     uint64
+		scopeType uint
+		trueStatus = &sharedPb.StandardStatusResponse {
+			Status: true,
+		};
+		innerRows *sql.Row
+	)
+
+	singleRow := db.QueryRow("SELECT scope, scope_type FROM standard_users WHERE user_id=? AND scope=?", req.UserId, req.Scope)
+
+	if singleRow.Err() != nil && singleRow.Err() != sql.ErrNoRows {
+		return nil, singleRow.Err()
+	} else if singleRow.Err() == nil {
+		return trueStatus, nil
+	}
+
+	rows, err := db.Query("SELECT scope, scope_type FROM standard_users WHERE user_id=? ORDER BY scope_type ASC", req.UserId)
+	
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		if err := rows.Scan(&scope, &scopeType); err != nil {
+			return nil, err
+		}
+
+		if scopeType == 1 || scope == req.Scope {
+			return trueStatus, nil
+		}
+
+		switch scopeType {
+		case 2: {
+			if scope != req.Scope {
+				continue
+			}
+		}
+		case 3: {
+			innerRows = db.QueryRow("SELECT id FROM `groups` WHERE org_id=? AND id=?", scope, req.Scope)
+		}
+		case 4: {
+			innerRows = db.QueryRow("SELECT id FROM teams WHERE group_id=? AND id=?", scope, req.Scope)
+		}
+		}
+
+		if innerRows.Err() != nil && innerRows.Err() != sql.ErrNoRows {
+			return nil, innerRows.Err()
+		} else if singleRow.Err() == nil {
+			return trueStatus, nil
+		}
+	}
+
+	return &sharedPb.StandardStatusResponse {
+		Status: false,
+	}, nil
 }
