@@ -9,6 +9,7 @@ var files = []string {
 	"user-db-service",
 	"exam-db-service",
 	"relation-service",
+	"rbac-service",
 }
 
 func main() {

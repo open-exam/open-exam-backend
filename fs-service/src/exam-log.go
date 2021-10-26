@@ -45,7 +45,7 @@ func appendLog(ctx *gin.Context) {
 
 		loggedAt := time.Now().Unix()
 
-		conn, err := shared.GetGrpcConn("relation-service:" + examDbService)
+		conn, err := shared.GetGrpcConn("relation-service:" + relationService)
 
 		if err != nil {
 			ctx.JSON(500, errServiceConnection)
@@ -60,7 +60,7 @@ func appendLog(ctx *gin.Context) {
 			return
 		}
 
-		resHasAccess, err := client.HasAccess(context.Background(), &relationPb.HasAccessRequest{
+		rescanAccessExam, err := client.CanAccessExam(context.Background(), &relationPb.CanAccessExamRequest{
 			UserId: log.UserId,
 			ExamId: log.ExamId,
 			VerifyTime: true,
@@ -73,7 +73,7 @@ func appendLog(ctx *gin.Context) {
 
 		defer conn.Close()
 
-		if !resHasAccess.Status {
+		if !rescanAccessExam.Status {
 			ctx.Status(403)
 			return
 		}

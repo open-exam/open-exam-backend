@@ -6,11 +6,17 @@ import "shared.proto";
 
 service RelationService {
     rpc findExamorganization (StandardIdRequest) returns (StandardIdResponse) {};
-    rpc hasAccess (HasAccessRequest) returns (StandardValidResponse) {};
+    rpc canAccessExam (CanAccessExamRequest) returns (StandardStatusResponse) {};
+    rpc canAccessScope (CanAccessScopeRequest) returns (StandardStatusResponse) {};
 }
 
-message HasAccessRequest {
+message CanAccessExamRequest {
     string examId = 1;
     string userId = 2;
     bool verifyTime = 3;
+}
+
+message CanAccessScopeRequest {
+    string userId = 1;
+    uint64 scope = 2;
 }
