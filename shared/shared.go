@@ -2,6 +2,7 @@ package shared
 
 import (
 	"database/sql"
+	"github.com/gin-gonic/gin"
 	"github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
@@ -17,13 +18,13 @@ func SetEnv(mode *string) {
 	if len(os.Args) > 1 && len(os.Args[1]) > 0 {
 		*mode = os.Args[1]
 	}
+
 	if err := godotenv.Load("." + *mode + ".env"); err != nil {
 		log.Fatalf("Error loading .env file")
 	}
 }
 
 func DefaultGrpcServer (db *sql.DB, registerComponents func(*grpc.Server)) {
-
 	var err error
 
 	var (
@@ -85,4 +86,10 @@ func GetGrpcConn(connectionString string) (*grpc.ClientConn, error) {
 		defer conn.Close()
 	}
 	return conn, err
+}
+
+func JwtMiddleware() gin.HandlerFunc {
+	return func (ctx *gin.Context) {
+
+	}
 }
