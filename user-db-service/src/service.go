@@ -7,12 +7,20 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/go-sql-driver/mysql"
 	sharedPb "github.com/open-exam/open-exam-backend/grpc-shared"
 	pb "github.com/open-exam/open-exam-backend/user-db-service/grpc-user-db-service"
 	"github.com/open-exam/open-exam-backend/util"
 	"io"
 )
+
+type MySQLError struct {
+	Number  uint16
+	Message string
+}
+
+func (me *MySQLError) Error() string {
+	return fmt.Sprintf("Error %d: %s", me.Number, me.Message)
+}
 
 type Server struct {
 	pb.UnimplementedUserServiceServer
@@ -73,7 +81,7 @@ func (s *Server) CreateUser(stream pb.UserService_CreateUserServer) error {
 
 		_, err = db.Exec("INSERT INTO users VALUES (?, ?, ?, ?, ?)", Id, req.Email, req.Type, passHash, req.Name)
 		if err != nil {
-			if err.(*mysql.MySQLError).Number == 1062 {
+			if err.(*MySQLError).Number == 1062 {
 				rows := db.QueryRow("SELECT id FROM users WHERE email=?", req.Email)
 
 				err = rows.Scan(&Id)
