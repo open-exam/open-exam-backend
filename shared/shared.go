@@ -1,9 +1,13 @@
 package shared
 
 import (
+	"crypto/rsa"
 	"database/sql"
+	"errors"
+	"flag"
 	"github.com/gin-gonic/gin"
 	"github.com/go-sql-driver/mysql"
+	"github.com/golang-jwt/jwt"
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
@@ -11,15 +15,43 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
 	"time"
 )
 
+type SharedErrors struct {
+	ServiceConnection gin.H
+	UnknownError gin.H
+}
+
+var (
+	errUnexpectedSigningMethod = errors.New("unknown signing method")
+	Errors = SharedErrors {
+		ServiceConnection: gin.H {
+			"error": "could not connect to internal service",
+		},
+		UnknownError: gin.H {
+			"error": "an unknown error occurred",
+		},
+	}
+)
+
 func SetEnv(mode *string) {
-	if len(os.Args) > 1 && len(os.Args[1]) > 0 {
-		*mode = os.Args[1]
+	devMode := flag.Bool("dev", false, "Run in dev mode")
+	envFile := flag.String("env", "", ".env file path")
+	flag.Parse()
+
+	if *devMode {
+		*mode = "dev"
 	}
 
-	if err := godotenv.Load("." + *mode + ".env"); err != nil {
+	if err := godotenv.Load(func() string {
+		if len(*envFile) > 0 {
+			return *envFile
+		}
+
+		return "." + *mode + ".env"
+	}()); err != nil {
 		log.Fatalf("Error loading .env file")
 	}
 }
@@ -88,8 +120,43 @@ func GetGrpcConn(connectionString string) (*grpc.ClientConn, error) {
 	return conn, err
 }
 
-func JwtMiddleware() gin.HandlerFunc {
+func JwtMiddleware(publicKey *rsa.PublicKey) gin.HandlerFunc {
 	return func (ctx *gin.Context) {
+		header := ctx.Request.Header.Get("Authorization")
 
+		if len(header) == 0 {
+			ctx.AbortWithStatus(401)
+			return
+		}
+
+		splitHeader := strings.Split(header, "Bearer")
+		if len(splitHeader) != 2 || (len(splitHeader) == 2 && len(strings.TrimSpace(splitHeader[1])) == 0) {
+			ctx.AbortWithStatus(401)
+			return
+		}
+
+		tok, err := jwt.Parse(strings.TrimSpace(splitHeader[1]),
+			func (jwtToken *jwt.Token) (interface{}, error) {
+				if _, ok := jwtToken.Method.(*jwt.SigningMethodRSA); !ok {
+					return nil, errUnexpectedSigningMethod
+				}
+				return publicKey, nil
+			},
+		)
+
+		if err != nil {
+			ctx.AbortWithError(401, err)
+			return
+		}
+
+		claims, ok := tok.Claims.(jwt.MapClaims)
+		if !ok || !tok.Valid {
+			ctx.AbortWithStatus(403)
+			return
+		}
+
+		ctx.Set("user", claims["user"])
+		ctx.Set("data", claims["data"])
+		ctx.Next()
 	}
 }
