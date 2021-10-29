@@ -8,10 +8,10 @@ import (
 	"strings"
 )
 
-func GetId(size int) string {
+func GenerateRandomBytes(size uint32) []byte {
 	token := make([]byte, size)
 	rand.Read(token)
-	return hex.EncodeToString(token)
+	return token
 }
 
 func Map(vs []string, f func(string) string) []string {

@@ -60,7 +60,7 @@ func getExamClient(ctx *gin.Context) {
 		conn, err := shared.GetGrpcConn("exam-db-service:" + examDbService)
 
 		if err != nil {
-			ctx.JSON(500, errServiceConnection)
+			ctx.JSON(500, shared.Errors.ServiceConnection)
 			return
 		}
 
@@ -72,7 +72,7 @@ func getExamClient(ctx *gin.Context) {
 		defer conn.Close()
 
 		if err != nil {
-			ctx.JSON(500, errServiceConnection)
+			ctx.JSON(500, shared.Errors.ServiceConnection)
 			return
 		}
 
@@ -85,7 +85,7 @@ func getExamClient(ctx *gin.Context) {
 
 		conn, err = shared.GetGrpcConn("relation-service:" + relationService)
 		if err != nil {
-			ctx.JSON(500, errServiceConnection)
+			ctx.JSON(500, shared.Errors.ServiceConnection)
 			return
 		}
 
@@ -108,7 +108,7 @@ func getExamClient(ctx *gin.Context) {
 }
 
 func GetOrgFromExam(client relationPb.RelationServiceClient, examId string) (uint64, error) {
-	res, err := client.FindExamorganization(context.Background(), &sharedPb.StandardIdRequest{
+	res, err := client.FindExamOrganization(context.Background(), &sharedPb.StandardIdRequest{
 		IdString: examId,
 	})
 

@@ -48,7 +48,7 @@ func appendLog(ctx *gin.Context) {
 		conn, err := shared.GetGrpcConn("relation-service:" + relationService)
 
 		if err != nil {
-			ctx.JSON(500, errServiceConnection)
+			ctx.JSON(500, shared.Errors.ServiceConnection)
 			return
 		}
 
@@ -56,7 +56,7 @@ func appendLog(ctx *gin.Context) {
 		res, err := GetOrgFromExam(client, log.ExamId)
 
 		if err != nil {
-			ctx.JSON(500, errServiceConnection)
+			ctx.JSON(500, shared.Errors.ServiceConnection)
 			return
 		}
 
@@ -67,7 +67,7 @@ func appendLog(ctx *gin.Context) {
 		})
 
 		if err != nil {
-			ctx.JSON(500, errServiceConnection)
+			ctx.JSON(500, shared.Errors.ServiceConnection)
 			return
 		}
 
@@ -120,7 +120,7 @@ func getUserLog(ctx *gin.Context) {
 		conn, err := shared.GetGrpcConn("exam-db-service:" + examDbService)
 
 		if err != nil {
-			ctx.JSON(500, errServiceConnection)
+			ctx.JSON(500, shared.Errors.ServiceConnection)
 			return
 		}
 
@@ -128,7 +128,7 @@ func getUserLog(ctx *gin.Context) {
 		res, err := GetOrgFromExam(client, log.ExamId)
 
 		if err != nil {
-			ctx.JSON(500, errServiceConnection)
+			ctx.JSON(500, shared.Errors.ServiceConnection)
 			return
 		}
 

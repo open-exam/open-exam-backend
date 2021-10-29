@@ -21,10 +21,6 @@ func (s *Server) CheckValid(ctx context.Context, req *pb.CheckValidRequest) (*pb
 
 	if len(req.Id) != 0 {
 		rows := db.QueryRow("SELECT * FROM exam_client_access WHERE id = ?", req.Id)
-		if rows.Err() != nil {
-			return nil, rows.Err()
-		}
-
 		if err := rows.Scan(&id, &res.UserId, &res.ExamId, &res.OpenAt, &res.ClosesAt); err != nil {
 			return nil, err
 		}

@@ -28,7 +28,7 @@ var (
 	mode = "prod"
 	errServiceConnection = gin.H {
 		"error": "server_error",
-		"error_description": "501; could not connect to internal service",
+		"error_description": "could not connect to internal service",
 	}
 	errJWTCreation = gin.H {
 		"error": "server_error",
@@ -61,15 +61,22 @@ type tokenSet struct {
 }
 
 func main() {
-
 	shared.SetEnv(&mode)
+	gin.SetMode(gin.DebugMode)
 
-	listenAddr := os.Getenv("listen_addr")
+	if mode == "prod" {
+		gin.SetMode(gin.ReleaseMode)
+	}
 
 	validateOptions()
 
+	listenAddr := os.Getenv("listen_addr")
+
 	router := gin.New()
 	router.Use(gin.Recovery())
+	if mode == "dev" {
+		router.Use(gin.Logger())
+	}
 
 	router.GET("/authorize", authorize)
 	router.GET("/token", getToken)
@@ -82,7 +89,6 @@ func main() {
 func validateOptions() {
 	defaultRedirectUri = os.Getenv("redirect_uri")
 	userService = os.Getenv("user_service")
-
 
 	tempJwtPrivateKey, err := util.DecodeBase64([]byte(os.Getenv("jwt_private_key")))
 	if err != nil {

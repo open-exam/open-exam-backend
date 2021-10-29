@@ -5,7 +5,7 @@ option go_package = "github.com/open-exam/open-exam-backend/relation-service/grp
 import "shared.proto";
 
 service RelationService {
-    rpc findExamorganization (StandardIdRequest) returns (StandardIdResponse) {};
+    rpc findExamOrganization (StandardIdRequest) returns (StandardIdResponse) {};
     rpc canAccessExam (CanAccessExamRequest) returns (StandardStatusResponse) {};
     rpc canAccessScope (CanAccessScopeRequest) returns (StandardStatusResponse) {};
 }

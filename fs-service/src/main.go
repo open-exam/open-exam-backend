@@ -10,14 +10,15 @@ import (
 
 var (
 	mode = "prod"
-	errServiceConnection = gin.H {
-		"error": "server_error",
-		"error_description": "501; could not connect to internal service",
-	}
 )
 
 func main() {
 	shared.SetEnv(&mode)
+	gin.SetMode(gin.DebugMode)
+
+	if mode == "prod" {
+		gin.SetMode(gin.ReleaseMode)
+	}
 
 	validateOptions()
 
@@ -25,6 +26,9 @@ func main() {
 
 	router := gin.New()
 	router.Use(gin.Recovery())
+	if mode == "dev" {
+		router.Use(gin.Logger())
+	}
 
 	InitExamFiles(router.Group("/exam-files"))
 	InitExamLog(router.Group("/exam-log"))
