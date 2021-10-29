@@ -1,31 +1,20 @@
 package main
 
 import (
+	"crypto/rsa"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 	"github.com/open-exam/open-exam-backend/shared"
+	"github.com/open-exam/open-exam-backend/util"
 	"log"
 	"os"
 )
 
 var (
 	mode = "prod"
+	jwtPublicKey *rsa.PublicKey
+	rbacService string
 )
-
-// @title open-exam public API
-// @version 0.1
-// @description The open-exam publicly exposed API.
-// @termsOfService http://swagger.io/terms/
-
-// @contact.name API Support
-// @contact.url http://www.swagger.io/support
-// @contact.email support@swagger.io
-
-// @license.name Apache 2.0
-// @license.url https://github.com/open-exam/open-exam-backend/blob/master/LICENSE
-
-// @host localhost:8080
-// @BasePath /
-// @schemes http
 
 func main() {
 	shared.SetEnv(&mode)
@@ -41,6 +30,11 @@ func main() {
 
 	router := gin.New()
 	router.Use(gin.Recovery())
+	if mode == "dev" {
+		router.Use(gin.Logger())
+	}
+
+	InitUsers(router.Group("/users"))
 
 	if err := router.Run(listenAddr); err != nil {
 		log.Fatalf("failed to start oauth2 server: %v", err)
@@ -48,5 +42,14 @@ func main() {
 }
 
 func validateOptions() {
+	tempJwtPublicKey, err := util.DecodeBase64([]byte(os.Getenv("jwt_public_key")))
+	if err != nil {
+		log.Fatalf("invalid jwt_public_key")
+	}
+	jwtPublicKey, err = jwt.ParseRSAPublicKeyFromPEM(tempJwtPublicKey)
+	if err != nil {
+		log.Fatalf("invalid jwt_public_key")
+	}
 
+	rbacService = os.Getenv("rbac_service")
 }
