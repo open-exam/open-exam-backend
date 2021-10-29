@@ -3,7 +3,7 @@ name: "rbac-service"
 on:
   push:
     paths:
-      - "routes/rbac-service/**"
+      - "rbac-service/**"
       - ".github/workflows/rbac-service.yaml"
 
 jobs:
