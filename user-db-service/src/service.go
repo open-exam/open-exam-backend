@@ -6,10 +6,12 @@ import (
 	_ "database/sql"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"github.com/go-sql-driver/mysql"
 	sharedPb "github.com/open-exam/open-exam-backend/grpc-shared"
 	pb "github.com/open-exam/open-exam-backend/user-db-service/grpc-user-db-service"
 	"github.com/open-exam/open-exam-backend/util"
+	"io"
 )
 
 type Server struct {
@@ -37,84 +39,143 @@ func (s *Server) FindOne(ctx context.Context, req *pb.FindOneRequest) (*pb.User,
 	return nil, errors.New("id or email not given")
 }
 
-func (s *Server) CreateUser(ctx context.Context, req *pb.User) (*pb.User, error) {
-	if len(req.Email) == 0 {
-		return nil, errors.New("email is required")
+func (s *Server) CreateUser(stream pb.UserService_CreateUserServer) error {
+	handleStreamSend := func(user *pb.User) {
+		err := stream.Send(user)
+		if err != nil {
+			fmt.Println("could not send response")
+		}
 	}
 
-	password := generatePassword(standardPasswordSize)
-	passHash, err := generateFromPassword(password)
-	if err != nil {
-		return nil, errors.New("unknown error while generating password")
-	}
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			return nil
+		}
 
-	Id := hex.EncodeToString(util.GenerateRandomBytes(32))
+		if len(req.Email) == 0 {
+			handleStreamSend(&pb.User {
+				Error: "email is required",
+			})
+			continue
+		}
 
-	_, err = db.Exec("INSERT INTO users VALUES (?, ?, ?, ?, ?)", Id, req.Email, req.Type, passHash, req.Name)
-	if err != nil {
-		if err.(*mysql.MySQLError).Number == 1062 {
-			rows := db.QueryRow("SELECT id FROM users WHERE email=?", req.Email)
+		password := generatePassword(standardPasswordSize)
+		passHash, err := generateFromPassword(password)
+		if err != nil {
+			handleStreamSend(&pb.User {
+				Error: "unknown error while generating password",
+			})
+			continue
+		}
 
-			err = rows.Scan(&Id)
-			if err != nil {
-				return nil, err
+		Id := hex.EncodeToString(util.GenerateRandomBytes(32))
+
+		_, err = db.Exec("INSERT INTO users VALUES (?, ?, ?, ?, ?)", Id, req.Email, req.Type, passHash, req.Name)
+		if err != nil {
+			if err.(*mysql.MySQLError).Number == 1062 {
+				rows := db.QueryRow("SELECT id FROM users WHERE email=?", req.Email)
+
+				err = rows.Scan(&Id)
+				if err != nil {
+					handleStreamSend(&pb.User {
+						Error: "an unknown error occurred",
+					})
+					continue
+				}
+
+				handleStreamSend(&pb.User {
+					Id: Id,
+				})
+				continue
 			}
 
-			return &pb.User {
-				Id: Id,
-			}, nil
+			handleStreamSend(&pb.User {
+				Error: "an unknown error occurred",
+			})
+			continue
 		}
 
-		return nil, err
+		handleStreamSend(&pb.User {
+			Id: Id,
+		})
 	}
-
-	return &pb.User {
-		Id: Id,
-	}, nil
 }
 
-func (s *Server) AddUserToScope(ctx context.Context, req *pb.AddUser) (*sharedPb.StandardStatusResponse, error) {
-	if len(req.Id) == 0 {
-		return nil, errors.New("id is required")
+func (s *Server) AddUserToScope(stream pb.UserService_AddUserToScopeServer) error {
+	handleStreamSend := func(user *sharedPb.StandardStatusResponse) {
+		err := stream.Send(user)
+		if err != nil {
+			fmt.Println("could not send response")
+		}
 	}
 
-	if req.Scope == 0 || req.ScopeType == 0 {
-		return nil, errors.New("scope and scopeType are required")
-	}
-
-	row := db.QueryRow("SELECT type FROM users WHERE id=?", req.Id)
-
-	var userType uint32
-	err := row.Scan(&userType)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return &sharedPb.StandardStatusResponse{
-				Status: false,
-				Message: "user does not exist",
-			}, nil
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			return nil
 		}
 
-		return nil, err
-	}
+		if len(req.Id) == 0 {
+			handleStreamSend(&sharedPb.StandardStatusResponse {
+				Status: false,
+				Message: "id is required",
+			})
+			continue
+		}
 
-	if userType == 1 && req.ScopeType != 4 {
-		return &sharedPb.StandardStatusResponse{
-			Status: false,
-			Message: "student can only be assigned to teams",
-		}, nil
-	}
+		if req.Scope == 0 || req.ScopeType == 0 {
+			handleStreamSend(&sharedPb.StandardStatusResponse {
+				Status: false,
+				Message: "scope and scopeType are required",
+			})
+			continue
+		}
 
-	if userType == 1 {
-		_, err = db.Exec("INSERT INTO students(id, team_id) VALUES (?,?)", req.Id, req.Scope)
-	} else {
-		_, err = db.Exec("INSERT INTO standard_users VALUES (?,?,?)", req.Id, req.Scope, req.ScopeType)
-	}
+		row := db.QueryRow("SELECT type FROM users WHERE id=?", req.Id)
 
-	if err != nil {
-		return nil, err
-	}
+		var userType uint32
+		err = row.Scan(&userType)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				handleStreamSend(&sharedPb.StandardStatusResponse {
+					Status: false,
+					Message: "user does not exist",
+				})
+				continue
+			}
 
-	return &sharedPb.StandardStatusResponse {
-		Status: true,
-	}, nil
+			handleStreamSend(&sharedPb.StandardStatusResponse{
+				Status: false,
+				Message: err.Error(),
+			})
+			continue
+		}
+
+		if userType == 1 && req.ScopeType != 4 {
+			handleStreamSend(&sharedPb.StandardStatusResponse {
+				Status: false,
+				Message: "student can only be assigned to teams",
+			})
+			continue
+		}
+
+		if userType == 1 {
+			_, err = db.Exec("INSERT INTO students(id, team_id) VALUES (?,?)", req.Id, req.Scope)
+		} else {
+			_, err = db.Exec("INSERT INTO standard_users VALUES (?,?,?)", req.Id, req.Scope, req.ScopeType)
+		}
+
+		if err != nil {
+			handleStreamSend(&sharedPb.StandardStatusResponse {
+				Status: false,
+				Message: "an unknown error occurred",
+			})
+			continue
+		}
+
+		handleStreamSend(&sharedPb.StandardStatusResponse {
+			Status: true,
+		})
+	}
 }

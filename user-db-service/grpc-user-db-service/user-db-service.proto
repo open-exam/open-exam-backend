@@ -6,8 +6,8 @@ import "shared.proto";
 
 service UserService {
     rpc findOne (FindOneRequest) returns (User) {};
-    rpc createUser (User) returns (User) {};
-    rpc addUserToScope (AddUser) returns (StandardStatusResponse) {};
+    rpc createUser (stream User) returns (stream User) {};
+    rpc addUserToScope (stream AddUser) returns (stream StandardStatusResponse) {};
 }
 
 message FindOneRequest {
@@ -22,6 +22,8 @@ message User {
     uint32 type = 3;
     string name = 4;
     string password = 5;
+    string error = 6;
+    uint32 count = 7;
 }
 
 message AddUser {
