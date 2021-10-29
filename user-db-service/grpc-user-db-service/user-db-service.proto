@@ -2,8 +2,12 @@ syntax = "proto3";
 
 option go_package = "github.com/open-exam/open-exam-backend/user-db-service/grpc-user-db-service;grpc_user_db_service";
 
+import "shared.proto";
+
 service UserService {
     rpc findOne (FindOneRequest) returns (User) {};
+    rpc createUser (User) returns (User) {};
+    rpc addUserToScope (AddUser) returns (StandardStatusResponse) {};
 }
 
 message FindOneRequest {
@@ -16,5 +20,12 @@ message User {
     string id = 1;
     string email = 2;
     uint32 type = 3;
-    string password = 4;
+    string name = 4;
+    string password = 5;
+}
+
+message AddUser {
+    string id = 1;
+    uint64 scope = 2;
+    uint32 scopeType = 3;
 }
