@@ -261,8 +261,6 @@ DROP TABLE IF EXISTS `students`;
 CREATE TABLE `students` (
   `id` varchar(64) NOT NULL,
   `team_id` bigint unsigned NOT NULL,
-  `name` varchar(45) DEFAULT NULL,
-  `email` varchar(45) DEFAULT NULL,
   `phone` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `team_id_idx` (`team_id`),
@@ -301,6 +299,7 @@ CREATE TABLE `users` (
   `email` varchar(320) NOT NULL,
   `type` int unsigned NOT NULL,
   `password` varchar(128) NOT NULL,
+  `name` varchar(128) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id_UNIQUE` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -315,4 +314,4 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2021-10-26 10:38:48
+-- Dump completed on 2021-10-29 13:46:05
