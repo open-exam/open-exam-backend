@@ -1,9 +1,11 @@
 package util
 
 import (
+	"bytes"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/csv"
 	"encoding/hex"
 	"strings"
 )
@@ -57,4 +59,9 @@ func SplitAndParse(data string) []string {
 	return Map(strings.Split(data, ","), func(item string) string {
 		return strings.TrimSpace(item)
 	})
+}
+
+func ReadCSV(buf []byte) ([][]string, error){
+	r := csv.NewReader(bytes.NewReader(buf))
+	return r.ReadAll()
 }
