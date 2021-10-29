@@ -145,7 +145,7 @@ func JwtMiddleware(publicKey *rsa.PublicKey) gin.HandlerFunc {
 		)
 
 		if err != nil {
-			ctx.AbortWithError(401, err)
+			ctx.AbortWithStatusJSON(401, err)
 			return
 		}
 

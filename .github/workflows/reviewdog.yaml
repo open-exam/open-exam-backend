@@ -1,9 +1,6 @@
 name: reviewdog
 
-on:
-  pull_request:
-    branches:
-      - master
+on: [pull_request]
 
 jobs:
   golangci-lint:
