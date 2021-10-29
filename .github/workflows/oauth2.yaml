@@ -20,6 +20,14 @@ jobs:
       - name: Install deps
         run: |-
           go mod download
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.26
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1
+      - name: Install protoc
+        uses: abelfodil/protoc-action@v1
+        with:
+          protoc-version: '3.12.4'
+      - name: Build proto files
+        run: go run dev/scripts/proto.go -all
       - name: Build
         run: |-
           cd oauth2/src
