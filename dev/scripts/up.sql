@@ -261,7 +261,6 @@ DROP TABLE IF EXISTS `students`;
 CREATE TABLE `students` (
   `id` varchar(64) NOT NULL,
   `team_id` bigint unsigned NOT NULL,
-  `phone` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `team_id_idx` (`team_id`),
   CONSTRAINT `team_id` FOREIGN KEY (`team_id`) REFERENCES `teams` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -280,6 +279,7 @@ CREATE TABLE `teams` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `group_id` bigint unsigned NOT NULL,
   `name` varchar(128) NOT NULL,
+  `display_name` varchar(45) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id_UNIQUE` (`id`),
   KEY `group_id_idx` (`group_id`),
@@ -314,4 +314,4 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2021-10-29 13:46:05
+-- Dump completed on 2021-10-30 20:23:18

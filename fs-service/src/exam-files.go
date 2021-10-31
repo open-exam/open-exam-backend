@@ -60,7 +60,7 @@ func getExamClient(ctx *gin.Context) {
 		conn, err := shared.GetGrpcConn("exam-db-service:" + examDbService)
 
 		if err != nil {
-			ctx.JSON(500, shared.Errors.ServiceConnection)
+			ctx.JSON(500, shared.GinErrors.ServiceConnection)
 			return
 		}
 
@@ -72,7 +72,7 @@ func getExamClient(ctx *gin.Context) {
 		defer conn.Close()
 
 		if err != nil {
-			ctx.JSON(500, shared.Errors.ServiceConnection)
+			ctx.JSON(500, shared.GinErrors.ServiceConnection)
 			return
 		}
 
@@ -85,7 +85,7 @@ func getExamClient(ctx *gin.Context) {
 
 		conn, err = shared.GetGrpcConn("relation-service:" + relationService)
 		if err != nil {
-			ctx.JSON(500, shared.Errors.ServiceConnection)
+			ctx.JSON(500, shared.GinErrors.ServiceConnection)
 			return
 		}
 

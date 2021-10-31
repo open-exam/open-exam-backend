@@ -19,20 +19,29 @@ import (
 	"time"
 )
 
-type SharedErrors struct {
+type GinErrorList struct {
 	ServiceConnection gin.H
 	UnknownError gin.H
 }
 
+type StandardErrorList struct {
+	ServiceConnection error
+	UnknownError error
+}
+
 var (
 	errUnexpectedSigningMethod = errors.New("unknown signing method")
-	Errors = SharedErrors {
+	GinErrors                  = GinErrorList{
 		ServiceConnection: gin.H {
 			"error": "could not connect to internal service",
 		},
 		UnknownError: gin.H {
 			"error": "an unknown error occurred",
 		},
+	}
+	Errors = StandardErrorList {
+		ServiceConnection: errors.New("could not connect to service"),
+		UnknownError: errors.New("an unknown error occurred"),
 	}
 )
 

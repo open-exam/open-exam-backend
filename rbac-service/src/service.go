@@ -51,7 +51,7 @@ func (s *Server) DoesRoleExist(ctx context.Context, req *pb.RoleExistRequest) (*
 
 func (s *Server) CanPerformOperation(ctx context.Context, req *pb.CanPerformOperationRequest) (*sharedPb.StandardStatusResponse, error) {
 
-	var Ids []uint64
+	Ids := make([]uint64, 0)
 
 	if req.OperationId > 0 {
 		rows := db.QueryRow("SELECT id FROM operations WHERE id=?", req.OperationId)
