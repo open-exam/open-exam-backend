@@ -14,6 +14,7 @@ var (
 	mode = "prod"
 	jwtPublicKey *rsa.PublicKey
 	rbacService string
+	userService string
 )
 
 func main() {
@@ -52,4 +53,5 @@ func validateOptions() {
 	}
 
 	rbacService = os.Getenv("rbac_service")
+	userService = os.Getenv("user_service")
 }

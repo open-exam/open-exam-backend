@@ -8,6 +8,7 @@ service UserService {
     rpc findOne (FindOneRequest) returns (User) {};
     rpc createUser (stream User) returns (stream User) {};
     rpc addUserToScope (stream AddUser) returns (stream StandardStatusResponse) {};
+    rpc getUser(StandardIdRequest) returns (DetailedUser) {};
 }
 
 message FindOneRequest {
@@ -30,4 +31,29 @@ message AddUser {
     string id = 1;
     uint64 scope = 2;
     uint32 scopeType = 3;
+}
+
+message DetailedUser {
+    string id = 1;
+    string name = 2;
+    string email = 3;
+    repeated Organization organizations = 4;
+}
+
+message Organization {
+    uint64 id = 1;
+    string name = 2;
+    repeated Group groups = 3;
+}
+
+message Group {
+    uint64 id = 1;
+    string name = 2;
+    repeated Team teams = 3;
+}
+
+message Team {
+    uint64 id = 1;
+    string name = 2;
+    string displayName = 3;
 }

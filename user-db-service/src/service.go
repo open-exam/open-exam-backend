@@ -7,10 +7,11 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
+
 	sharedPb "github.com/open-exam/open-exam-backend/grpc-shared"
 	pb "github.com/open-exam/open-exam-backend/user-db-service/grpc-user-db-service"
 	"github.com/open-exam/open-exam-backend/util"
-	"io"
 )
 
 type MySQLError struct {
@@ -186,4 +187,56 @@ func (s *Server) AddUserToScope(stream pb.UserService_AddUserToScopeServer) erro
 			Status: true,
 		})
 	}
+}
+
+func (s *Server) GetUser(ctx context.Context, req *sharedPb.StandardIdRequest) (*pb.DetailedUser, error) {
+	if len(req.IdString) == 0 {
+		return nil, errors.New("id is required")
+	}
+
+	student := &pb.DetailedUser {}
+	userRow := db.QueryRow("SELECT id, name, email FROM users WHERE id=? AND type=1", req.IdString)
+
+	err := userRow.Scan(&student.Id, &student.Name, &student.Email)
+	if err != nil {
+		return nil, errors.New("student does not exist")
+	}
+
+	res, err := db.Query("SELECT teams.id, teams.name, teams.display_name, `groups`.id, `groups`.name, organizations.id, organizations.name FROM students RIGHT JOIN teams ON students.team_id = teams.id RIGHT JOIN `groups` ON teams.group_id = `groups`.id RIGHT JOIN organizations on `groups`.org_id = organizations.id WHERE students.id=?", req.IdString)
+	if err != nil {
+		return nil, err
+	}
+
+	orgs := make([]*pb.Organization, 0)
+	grps := make([]*pb.Group, 0)
+	orgList := make(map[uint64]bool, 0)
+	groupList := make(map[uint64]int, 0)
+
+	for res.Next() {
+		team := &pb.Team{}
+		group := &pb.Group{}
+		org := &pb.Organization{}
+
+		if err := res.Scan(&team.Id, &team.Name, &team.DisplayName, &group.Id, &group.Name, &org.Id, &org.Name); err != nil {
+			return nil, err
+		}
+
+		_, ok := orgList[org.Id]
+		if !ok {
+			orgs = append(orgs, org)
+			orgList[org.Id] = true
+		}
+
+		_, ok = groupList[group.Id]
+		if !ok {
+			grps = append(grps, group)
+			groupList[group.Id] = len(grps) - 1
+		}
+
+		idx, _ := groupList[group.Id]
+		grps[idx].Teams = append(grps[idx].Teams, team)
+	}
+
+	student.Organizations = orgs
+	return student, nil
 }

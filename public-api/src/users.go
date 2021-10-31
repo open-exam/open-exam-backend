@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	sharedPb "github.com/open-exam/open-exam-backend/grpc-shared"
 	"io"
 	"regexp"
 	"strconv"
@@ -88,7 +89,7 @@ func InitUsers(router *gin.RouterGroup) {
 
 	router.POST("/", createUser)
 	router.POST("/generate", generateUsers)
-	router.GET("/", getUser)
+	router.GET("/:userId", getUser)
 	//router.PUT("/", updateUser)
 	//router.DELETE("/", deleteUser)
 }
@@ -371,7 +372,32 @@ func generateUsers(ctx *gin.Context) {
 }
 
 func getUser(ctx *gin.Context) {
+	userId := ctx.Param("userId")
+	if len(userId) == 0 {
+		ctx.AbortWithStatusJSON(400, gin.H {
+			"error": "user id not specified",
+		})
+		return
+	}
 
+	conn, err := shared.GetGrpcConn(userService)
+
+	userClient := userPb.NewUserServiceClient(conn)
+
+	res, err := userClient.GetUser(context.Background(), &sharedPb.StandardIdRequest {
+		IdString: userId,
+	})
+	if err != nil {
+		status := 400
+		if err == shared.Errors.ServiceConnection || err == shared.Errors.UnknownError {
+			status = 500
+		}
+
+		ctx.AbortWithStatusJSON(status, err)
+		return
+	}
+
+	ctx.JSON(200, res)
 }
 
 func findEmail(data *[]ParsedUser, idx uint32) (string, int) {
