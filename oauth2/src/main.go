@@ -14,7 +14,6 @@ import (
 	pb "github.com/open-exam/open-exam-backend/user-db-service/grpc-user-db-service"
 	"github.com/open-exam/open-exam-backend/util"
 	"golang.org/x/crypto/argon2"
-	"google.golang.org/grpc"
 	"log"
 	"net/url"
 	"os"
@@ -155,12 +154,7 @@ func authorize(ctx *gin.Context) {
 	}
 
 	if len(username) > 0 && len(passwd) > 0 && len(codeChallenge) > 0 {
-		conn, err := grpc.Dial("user-db-service:" + userService, grpc.WithInsecure())
-		if err != nil {
-			defer conn.Close()
-			ctx.JSON(500, errServiceConnection)
-			return
-		}
+		conn, err := shared.GetGrpcConn(userService)
 		client := pb.NewUserServiceClient(conn)
 
 		response, err := client.FindOne(context.Background(), &pb.FindOneRequest{

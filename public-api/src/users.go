@@ -104,7 +104,7 @@ func createUser(ctx *gin.Context) {
 		return
 	}
 
-	conn, err := shared.GetGrpcConn("rbac-service:" + rbacService)
+	conn, err := shared.GetGrpcConn(rbacService)
 	if err != nil {
 		ctx.AbortWithStatusJSON(500, shared.GinErrors.ServiceConnection)
 		return
@@ -299,7 +299,7 @@ func generateUsers(ctx *gin.Context) {
 		}
 	}
 
-	conn, err := shared.GetGrpcConn("rbac-service:" + rbacService)
+	conn, err := shared.GetGrpcConn(rbacService)
 	if err != nil {
 		ctx.AbortWithStatusJSON(500, shared.GinErrors.ServiceConnection)
 		return

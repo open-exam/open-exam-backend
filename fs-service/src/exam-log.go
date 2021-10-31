@@ -45,7 +45,7 @@ func appendLog(ctx *gin.Context) {
 
 		loggedAt := time.Now().Unix()
 
-		conn, err := shared.GetGrpcConn("relation-service:" + relationService)
+		conn, err := shared.GetGrpcConn(relationService)
 
 		if err != nil {
 			ctx.JSON(500, shared.GinErrors.ServiceConnection)
@@ -117,7 +117,7 @@ func getUserLog(ctx *gin.Context) {
 			return
 		}
 
-		conn, err := shared.GetGrpcConn("exam-db-service:" + examDbService)
+		conn, err := shared.GetGrpcConn(examDbService)
 
 		if err != nil {
 			ctx.JSON(500, shared.GinErrors.ServiceConnection)

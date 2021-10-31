@@ -138,7 +138,7 @@ func (s *Server) RevokeRole(ctx context.Context, req *pb.GiveRoleRequest) (*shar
 
 func (s *Server) checkAccessValidity(ctx context.Context, req *pb.GiveRoleRequest) (*sharedPb.StandardStatusResponse,
 	error) {
-	conn, err := shared.GetGrpcConn("relation-service:" + relationService)
+	conn, err := shared.GetGrpcConn(relationService)
 
 	if err != nil {
 		return nil, err
