@@ -154,7 +154,7 @@ func (res *Exam) Validate() error {
 				return fmt.Errorf("pooled sets not specified in section `%s`", e.Name)
 			}
 
-			for i, _ := range e.QuestionConfig.PooledSetQuestions.PooledSets {
+			for i := range e.QuestionConfig.PooledSetQuestions.PooledSets {
 				if len(e.QuestionConfig.PooledSetQuestions.PooledSets[i]) != 2 {
 					return fmt.Errorf("pooled set config at [%d] in section `%s` not found", i, e.Name)
 				}
