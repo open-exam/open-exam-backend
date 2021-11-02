@@ -22,6 +22,7 @@ import (
 type GinErrorList struct {
 	ServiceConnection gin.H
 	UnknownError gin.H
+	JsonParseError gin.H
 }
 
 type StandardErrorList struct {
@@ -37,6 +38,9 @@ var (
 		},
 		UnknownError: gin.H {
 			"error": "an unknown error occurred",
+		},
+		JsonParseError: gin.H {
+			"error": "could not parse JSON",
 		},
 	}
 	Errors = StandardErrorList {
@@ -129,8 +133,12 @@ func GetGrpcConn(connectionString string) (*grpc.ClientConn, error) {
 	return conn, err
 }
 
-func JwtMiddleware(publicKey *rsa.PublicKey) gin.HandlerFunc {
+func JwtMiddleware(publicKey *rsa.PublicKey, mode string) gin.HandlerFunc {
 	return func (ctx *gin.Context) {
+		if mode == "dev" {
+			ctx.Next()
+			return
+		}
 		header := ctx.Request.Header.Get("Authorization")
 
 		if len(header) == 0 {
