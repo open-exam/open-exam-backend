@@ -39,12 +39,12 @@ type CreateUser struct {
 }
 
 type CreateStudent struct {
-	TeamId uint64 `json:"team_id"`
+	TeamId uint64 `json:"team_id" binding:"required"`
 }
 
 type CreateStandardUser struct {
-	Scope     uint64 `json:"scope"`
-	ScopeType uint32 `json:"scope_type"`
+	Scope     uint64 `json:"scope" binding:"required"`
+	ScopeType uint32 `json:"scope_type" binding:"required"`
 }
 
 type ErrorList struct {
@@ -85,7 +85,7 @@ func (res *CreateUser) UnmarshalJSON(data []byte) error {
 }
 
 func InitUsers(router *gin.RouterGroup) {
-	router.Use(shared.JwtMiddleware(jwtPublicKey))
+	router.Use(shared.JwtMiddleware(jwtPublicKey, mode))
 
 	router.POST("/", createUser)
 	router.POST("/generate", generateUsers)
@@ -115,7 +115,7 @@ func createUser(ctx *gin.Context) {
 	res, err := rbacClient.CanPerformOperation(context.Background(), &rbacPb.CanPerformOperationRequest{
 		UserId:    req.CommonFields.UserId,
 		Scope:     req.CommonFields.RunScope,
-		Resource:  "users",
+		Resource:  "USERS",
 		Operation: []string{"CREATE"},
 	})
 
@@ -207,6 +207,7 @@ func generateUsers(ctx *gin.Context) {
 	buf, err := ctx.GetRawData()
 	if err != nil {
 		ctx.AbortWithStatusJSON(400, shared.GinErrors.UnknownError)
+		return
 	}
 
 	records, err := util.ReadCSV(buf)

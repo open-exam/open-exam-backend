@@ -162,8 +162,9 @@ func (s *Server) checkAccessValidity(ctx context.Context, req *pb.GiveRoleReques
 
 	canPerform, err := s.CanPerformOperation(ctx, &pb.CanPerformOperationRequest{
 		UserId: req.UserId,
-		Resource: "SCOPE_ROLES",
-		Operation: []string{"CREATE"},
+		Resource: "RBAC",
+		Operation: []string{"CREATE", "DELETE"},
+		Scope: req.Scope,
 	})
 
 	if err != nil {
