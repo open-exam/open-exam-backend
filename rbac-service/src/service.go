@@ -32,10 +32,6 @@ func (s *Server) DoesRoleExist(ctx context.Context, req *pb.RoleExistRequest) (*
 
 	rows := db.QueryRow("SELECT id FROM operations WHERE operation=? AND resource=?", req.Operation, req.Resource)
 
-	if rows.Err() != nil {
-		return nil, rows.Err()
-	}
-
 	var OperationId uint64
 	if err := rows.Scan(&OperationId); err != nil {
 		if err == sql.ErrNoRows {
@@ -55,18 +51,13 @@ func (s *Server) DoesRoleExist(ctx context.Context, req *pb.RoleExistRequest) (*
 
 func (s *Server) CanPerformOperation(ctx context.Context, req *pb.CanPerformOperationRequest) (*sharedPb.StandardStatusResponse, error) {
 
-	var (
-		rows *sql.Row
-		Id uint64
-	)
+	Ids := make([]uint64, 0)
 
 	if req.OperationId > 0 {
-		rows = db.QueryRow("SELECT id FROM operations WHERE id=?", req.OperationId)
-		if rows.Err() != nil {
-			return nil, rows.Err()
-		}
+		rows := db.QueryRow("SELECT id FROM operations WHERE id=?", req.OperationId)
 
-		if err := rows.Scan(&Id); err != nil {
+		Ids = append(Ids, 0)
+		if err := rows.Scan(&Ids[0]); err != nil {
 			return handleError(err)
 		}
 	} else {
@@ -74,26 +65,31 @@ func (s *Server) CanPerformOperation(ctx context.Context, req *pb.CanPerformOper
 			return nil, errors.New("resource and operation is required")
 		}
 
-		rows = db.QueryRow("SELECT id FROM operations WHERE resource=? AND operation=?", req.Resource, req.Operation)
-		if rows.Err() != nil {
-			return nil, rows.Err()
+		rows, err := db.Query("SELECT id FROM operations WHERE resource=? AND operation IN (?)", req.Resource, req.Operation)
+		if err != nil {
+			return nil, err
 		}
 
-		if err := rows.Scan(&Id); err != nil {
-			return handleError(err)
+		count := 0
+		for rows.Next() {
+			Ids = append(Ids, 0)
+			rows.Scan(&Ids[count])
+			count++
 		}
 	}
 
-	rbacRows := db.QueryRow("SELECT id FROM rbac WHERE user_id=? AND oper_id=? AND scope=?", req.UserId, req.OperationId, req.Scope)
-
-	if rbacRows.Err() != nil {
-		return nil, rbacRows.Err()
+	if len(Ids) == 0 {
+		return handleError(sql.ErrNoRows)
 	}
 
-	err := rbacRows.Scan(&Id)
-	
+	rbacRows, err := db.Query("SELECT id FROM rbac WHERE user_id=? AND oper_id IN(?) AND scope=?", req.UserId, Ids, req.Scope)
+
 	if err != nil {
-		return handleError(err)
+		return nil, err
+	}
+
+	if !rbacRows.Next() {
+		return handleError(sql.ErrNoRows)
 	}
 
 	return &sharedPb.StandardStatusResponse {
@@ -142,7 +138,7 @@ func (s *Server) RevokeRole(ctx context.Context, req *pb.GiveRoleRequest) (*shar
 
 func (s *Server) checkAccessValidity(ctx context.Context, req *pb.GiveRoleRequest) (*sharedPb.StandardStatusResponse,
 	error) {
-	conn, err := shared.GetGrpcConn("relation-service:" + relationService)
+	conn, err := shared.GetGrpcConn(relationService)
 
 	if err != nil {
 		return nil, err
@@ -166,8 +162,9 @@ func (s *Server) checkAccessValidity(ctx context.Context, req *pb.GiveRoleReques
 
 	canPerform, err := s.CanPerformOperation(ctx, &pb.CanPerformOperationRequest{
 		UserId: req.UserId,
-		Resource: "SCOPE_ROLES",
-		Operation: "CU",
+		Resource: "RBAC",
+		Operation: []string{"CREATE", "DELETE"},
+		Scope: req.Scope,
 	})
 
 	if err != nil {

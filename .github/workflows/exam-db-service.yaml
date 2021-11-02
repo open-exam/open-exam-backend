@@ -3,7 +3,7 @@ name: "exam-db-service"
 on:
   push:
     paths:
-      - "routes/exam-db-service/**"
+      - "exam-db-service/**"
       - ".github/workflows/exam-db-service.yaml"
 
 jobs:

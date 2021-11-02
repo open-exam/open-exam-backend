@@ -15,7 +15,7 @@ message CanPerformOperationRequest {
     string userId = 1;
     uint64 operationId = 2;
     string resource = 3;
-    string operation = 4;
+    repeated string operation = 4;
     uint64 scope = 5;
 }
 

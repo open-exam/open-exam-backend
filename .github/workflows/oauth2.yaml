@@ -1,10 +1,10 @@
-name: "rbac-service"
+name: "oauth2"
 
 on:
   push:
     paths:
-      - "rbac-service/**"
-      - ".github/workflows/rbac-service.yaml"
+      - "oauth2/**"
+      - ".github/workflows/oauth2.yaml"
 
 jobs:
   build-and-test:
@@ -30,5 +30,5 @@ jobs:
         run: go run dev/scripts/proto.go -all
       - name: Build
         run: |-
-          cd rbac-service/src
+          cd oauth2/src
           go build *
