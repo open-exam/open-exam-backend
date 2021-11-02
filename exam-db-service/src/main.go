@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+
 	pb "github.com/open-exam/open-exam-backend/exam-db-service/grpc-exam-db-service"
 	"github.com/open-exam/open-exam-backend/shared"
 	"google.golang.org/grpc"
@@ -17,7 +18,12 @@ func main() {
 	shared.SetEnv(&mode)
 
 	shared.DefaultGrpcServer(db, func(server *grpc.Server) {
-		s, _ := NewServer()
-		pb.RegisterExamClientAccessServer(server, s)
+		sExamClient, _ := NewExamClientAccessServer()
+		sExamService, _ := NewExamServiceServer()
+		sExamTemplate, _ := NewExamTemplateServer()
+
+		pb.RegisterExamClientAccessServer(server, sExamClient)
+		pb.RegisterExamServiceServer(server, sExamService)
+		pb.RegisterExamTemplateServer(server, sExamTemplate)
 	})
 }

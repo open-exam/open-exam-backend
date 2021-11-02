@@ -11,6 +11,11 @@ service ExamClientAccess {
 }
 
 service ExamService {
+    rpc createExam (CreateExamRequest) returns (StandardIdResponse) {};
+}
+
+service ExamTemplate {
+    rpc createTemplate (CreateExamTemplateRequest) returns (StandardIdResponse) {};
 }
 
 message CheckValidRequest {
@@ -34,4 +39,26 @@ message BatchAddKeysRequest {
     string userId = 1;
     string examId = 2;
     uint64 expireTime = 3;
+}
+
+message CreateExamRequest {
+    string name = 1;
+    uint64 startTime = 2;
+    uint64 endTime = 3;
+    uint32 duration = 4;
+    string createdBy = 5;
+    uint64 organization = 6;
+    string template = 7;
+    repeated Scope scopes = 8;
+}
+
+message CreateExamTemplateRequest {
+    string name = 1;
+    string template = 2;
+    repeated Scope scopes = 3;
+}
+
+message Scope {
+    uint64 scope = 1;
+    uint32 scopeType = 2;
 }
