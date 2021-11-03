@@ -73,7 +73,9 @@ func CreateMultipartForm(form map[string]string) (string, io.Reader, error) {
 	mp := multipart.NewWriter(body)
 	defer mp.Close()
 	for key, val := range form {
-		mp.WriteField(key, val)
+		if err := mp.WriteField(key, val); err != nil {
+			return "", nil, err
+		}
 	}
 	return mp.FormDataContentType(), body, nil
 }
