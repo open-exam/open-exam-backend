@@ -2,13 +2,23 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
-	rbacPb "github.com/open-exam/open-exam-backend/rbac-service/grpc-rbac-service"
+	examPb "github.com/open-exam/open-exam-backend/exam-db-service/grpc-exam-db-service"
+	sharedPb "github.com/open-exam/open-exam-backend/grpc-shared"
+	relationPb "github.com/open-exam/open-exam-backend/relation-service/grpc-relation-service"
 	"github.com/open-exam/open-exam-backend/shared"
 )
+
+type Exam struct {
+	Name string `json:"name" binding:"required"`
+	StartTime uint64 `json:"start_time" binding:"required"`
+	EndTime uint64 `json:"end_time" binding:"required"`
+	Duration uint32 `json:"duration" binding:"required"`
+	Template string `json:"template" binding:"required"`
+	Organization uint64 `json:"organization" binding:"required"`
+	Scopes []Scope `json:"scopes" binding:"required"`
+}
 
 func InitExams(router *gin.RouterGroup) {
 	router.Use(shared.JwtMiddleware(jwtPublicKey, mode))
@@ -17,61 +27,82 @@ func InitExams(router *gin.RouterGroup) {
 }
 
 func createExam(ctx *gin.Context) {
-	user, _ := ctx.Get("user")
-	tempScope := ctx.Query("scope")
-	if len(tempScope) == 0 {
-		ctx.AbortWithStatusJSON(400, gin.H {
-			"error": "scope is empty",
-		})
+	exam := Exam{}
+	if ctx.BindJSON(&exam) != nil {
+		ctx.AbortWithStatusJSON(400, shared.GinErrors.JsonParseError)
 		return
 	}
 
-	scope, err := strconv.ParseUint(tempScope, 10, 64)
-	if err != nil {
-		ctx.AbortWithStatusJSON(400, gin.H {
-			"error": "invalid scope",
-		})
-		return
-	}
-
-	conn, err := shared.GetGrpcConn(rbacService)
+	conn, err := shared.GetGrpcConn(examService)
 	if err != nil {
 		ctx.AbortWithStatusJSON(500, shared.GinErrors.ServiceConnection)
 		return
 	}
 
-	rbacClient := rbacPb.NewRbacServiceClient(conn)
-	res, err := rbacClient.CanPerformOperation(context.Background(), &rbacPb.CanPerformOperationRequest {
-		UserId: user.(string),
-		Resource: "EXAMS",
-		Operation: []string{"CREATE"},
-		Scope: scope,
+	examTemplateClient := examPb.NewExamTemplateClient(conn)
+
+	userId, _ := ctx.Get("user")
+	res, err := examTemplateClient.ValidateTemplate(context.Background(), &sharedPb.StandardIdRequest {
+		IdString: exam.Template,
 	})
+	if err != nil {
+		ctx.AbortWithStatusJSON(400, err)
+		return
+	}
 
 	if !res.Status {
-		ctx.AbortWithStatusJSON(403, gin.H {
-			"error": "you do not have permission to perform this operation",
-		})
-		return
-	}
-
-	buf, err := ctx.GetRawData()
-	if err != nil {
-		ctx.AbortWithStatusJSON(400, shared.GinErrors.UnknownError)
-		return
-	}
-
-	examConfig := &shared.Exam{}
-	err = json.Unmarshal(buf, examConfig)
-	if err != nil {
-		ctx.AbortWithStatusJSON(400, shared.GinErrors.JsonParseError)
-		return
-	}
-
-	if err := examConfig.Validate(); err != nil {
 		ctx.AbortWithStatusJSON(400, gin.H {
-			"error": err.Error(),
+			"error": res.Message,
 		})
 		return
 	}
+
+	relationClient := relationPb.NewRelationServiceClient(conn)
+
+	res, err = relationClient.CanAccessTemplate(context.Background(), &relationPb.CanAccessTemplateRequest {
+		UserId: userId.(string),
+		TemplateId: exam.Template,
+	})
+	if err != nil {
+		ctx.AbortWithStatusJSON(500, shared.GinErrors.UnknownError)
+		return
+	}
+
+	if !res.Status {
+		ctx.AbortWithStatusJSON(400, gin.H {
+			"error": res.Message,
+		})
+		return
+	}
+
+	examClient := examPb.NewExamServiceClient(conn)
+
+	scopes := make([]*examPb.Scope, len(exam.Scopes))
+	for i, sc := range exam.Scopes {
+		scopes[i] = &examPb.Scope {
+			Scope: sc.Scope,
+			ScopeType: sc.ScopeType,
+		}
+	}
+
+	createRes, err := examClient.CreateExam(context.Background(), &examPb.CreateExamRequest {
+		Name: exam.Name,
+		StartTime: exam.StartTime,
+		EndTime: exam.EndTime,
+		Duration: exam.Duration,
+		Template: exam.Template,
+		Organization: exam.Organization,
+		CreatedBy: userId.(string),
+		Scopes: scopes,
+	})
+	if err != nil {
+		ctx.AbortWithStatusJSON(400, err)
+		return
+	}
+
+	// TODO: run validateTemplate from exam-db-service to validate all question Ids pool Ids access scopes, etc.
+
+	ctx.JSON(200, gin.H {
+		"id": createRes.IdString,
+	})
 }

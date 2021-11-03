@@ -8,6 +8,7 @@ service RelationService {
     rpc findExamOrganization (StandardIdRequest) returns (StandardIdResponse) {};
     rpc canAccessExam (CanAccessExamRequest) returns (StandardStatusResponse) {};
     rpc canAccessScope (CanAccessScopeRequest) returns (StandardStatusResponse) {};
+    rpc canAccessTemplate (CanAccessTemplateRequest) returns (StandardStatusResponse) {};
 }
 
 message CanAccessExamRequest {
@@ -19,4 +20,9 @@ message CanAccessExamRequest {
 message CanAccessScopeRequest {
     string userId = 1;
     uint64 scope = 2;
+}
+
+message CanAccessTemplateRequest {
+    string userId = 1;
+    string templateId = 2;
 }

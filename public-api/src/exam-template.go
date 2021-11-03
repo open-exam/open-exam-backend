@@ -11,10 +11,7 @@ import (
 	"github.com/open-exam/open-exam-backend/util"
 )
 
-type Scope struct {
-	Scope uint64 `json:"scope"`
-	ScopeType uint32 `json:"scopeType"`
-}
+
 
 func InitExamTemplates(router *gin.RouterGroup) {
 	router.Use(shared.JwtMiddleware(jwtPublicKey, mode))

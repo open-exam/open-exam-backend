@@ -16,6 +16,7 @@ service ExamService {
 
 service ExamTemplate {
     rpc createTemplate (CreateExamTemplateRequest) returns (StandardIdResponse) {};
+    rpc validateTemplate (StandardIdRequest) returns (StandardStatusResponse) {};
 }
 
 message CheckValidRequest {
