@@ -1,11 +1,12 @@
 package main
 
 import (
+	"log"
+	"os"
+
 	"github.com/gin-gonic/gin"
 	"github.com/open-exam/open-exam-backend/shared"
 	"github.com/open-exam/open-exam-backend/util"
-	"log"
-	"os"
 )
 
 var (
@@ -33,6 +34,7 @@ func main() {
 	InitExamFiles(router.Group("/exam-files"))
 	InitExamLog(router.Group("/exam-log"))
 	InitQuestionFiles(router.Group("/question-files"))
+	InitExamTemplate(router.Group("/exam-template"))
 
 	if err := router.Run(listenAddr); err != nil {
 		log.Fatalf("failed to start oauth2 server: %v", err)

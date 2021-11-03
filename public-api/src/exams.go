@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"strconv"
+
 	"github.com/gin-gonic/gin"
 	rbacPb "github.com/open-exam/open-exam-backend/rbac-service/grpc-rbac-service"
 	"github.com/open-exam/open-exam-backend/shared"
-	"strconv"
 )
 
 func InitExams(router *gin.RouterGroup) {
@@ -73,6 +74,4 @@ func createExam(ctx *gin.Context) {
 		})
 		return
 	}
-
-
 }
