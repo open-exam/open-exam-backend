@@ -7,6 +7,8 @@ import (
 	"encoding/base64"
 	"encoding/csv"
 	"encoding/hex"
+	"io"
+	"mime/multipart"
 	"strings"
 )
 
@@ -64,4 +66,14 @@ func SplitAndParse(data string) []string {
 func ReadCSV(buf []byte) ([][]string, error){
 	r := csv.NewReader(bytes.NewReader(buf))
 	return r.ReadAll()
+}
+
+func CreateMultipartForm(form map[string]string) (string, io.Reader, error) {
+	body := new(bytes.Buffer)
+	mp := multipart.NewWriter(body)
+	defer mp.Close()
+	for key, val := range form {
+		mp.WriteField(key, val)
+	}
+	return mp.FormDataContentType(), body, nil
 }

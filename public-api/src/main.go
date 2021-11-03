@@ -17,6 +17,7 @@ var (
 	rbacService string
 	userService string
 	fsService string
+	examService string
 )
 
 func main() {
@@ -58,5 +59,6 @@ func validateOptions() {
 
 	rbacService = os.Getenv("rbac_service")
 	userService = os.Getenv("user_service")
-	userService = os.Getenv("fs_service")
+	fsService = os.Getenv("fs_service")
+	examService = os.Getenv("exam_service")
 }

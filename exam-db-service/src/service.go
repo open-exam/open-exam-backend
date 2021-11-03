@@ -118,10 +118,6 @@ func (s *ExamTemplateServer) CreateTemplate(ctx context.Context, req *pb.CreateE
 			return nil, errors.New("name not given")
 		}
 	
-		if len(req.Template) == 0 {
-			return nil, errors.New("template not given")
-		}
-	
 		if len(req.Scopes) == 0 {
 			return nil, errors.New("scopes not given")
 		}
