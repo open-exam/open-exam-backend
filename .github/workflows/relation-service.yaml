@@ -3,7 +3,7 @@ name: "relation-service"
 on:
   push:
     paths:
-      - "routes/relation-service/**"
+      - "relation-service/**"
       - ".github/workflows/relation-service.yaml"
 
 jobs:

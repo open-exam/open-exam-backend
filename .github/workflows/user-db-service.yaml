@@ -3,7 +3,7 @@ name: "user-db-service"
 on:
   push:
     paths:
-      - "routes/user-db-service/**"
+      - "user-db-service/**"
       - ".github/workflows/user-db-service.yaml"
 
 jobs:

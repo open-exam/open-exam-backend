@@ -24,9 +24,6 @@ func (s *Server) FindExamOrganization(ctx context.Context, req *sharedPb.Standar
 
 	if len(req.IdString) != 0 {
 		rows := db.QueryRow("SELECT org FROM exams where id=?", req.IdString)
-		if rows.Err() != nil {
-			return nil, rows.Err()
-		}
 
 		if err := rows.Scan(&scope); err == nil {
 			return &sharedPb.StandardIdResponse{
@@ -71,9 +68,6 @@ func (s *Server) CanAccessExam(ctx context.Context, req *pb.CanAccessExamRequest
 			Status: scope == teamId,
 		}
 
-		if rows.Err() != nil {
-			return nil, rows.Err()
-		}
 		if err := rows.Scan(&scope); err != nil {
 			return falseRes, nil
 		}
@@ -119,9 +113,11 @@ func (s *Server) CanAccessScope(ctx context.Context, req *pb.CanAccessScopeReque
 
 	singleRow := db.QueryRow("SELECT scope, scope_type FROM standard_users WHERE user_id=? AND scope=?", req.UserId, req.Scope)
 
-	if singleRow.Err() != nil && singleRow.Err() != sql.ErrNoRows {
-		return nil, singleRow.Err()
-	} else if singleRow.Err() == nil {
+	var temp uint64
+	singleRowErr := singleRow.Scan(&temp)
+	if singleRowErr != nil && singleRowErr != sql.ErrNoRows {
+		return nil, singleRowErr
+	} else if singleRowErr == nil {
 		return trueStatus, nil
 	}
 
@@ -154,9 +150,11 @@ func (s *Server) CanAccessScope(ctx context.Context, req *pb.CanAccessScopeReque
 		}
 		}
 
-		if innerRows.Err() != nil && innerRows.Err() != sql.ErrNoRows {
-			return nil, innerRows.Err()
-		} else if singleRow.Err() == nil {
+		var temp uint64
+		innerRowErr := innerRows.Scan(&temp)
+		if innerRowErr != nil && innerRowErr!= sql.ErrNoRows {
+			return nil, innerRowErr
+		} else if innerRowErr == nil {
 			return trueStatus, nil
 		}
 	}

@@ -1,7 +1,9 @@
 package main
 
 import (
+	"crypto/rsa"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 	"github.com/open-exam/open-exam-backend/shared"
 	"github.com/open-exam/open-exam-backend/util"
 	"log"
@@ -10,6 +12,9 @@ import (
 
 var (
 	mode = "prod"
+	jwtPublicKey *rsa.PublicKey
+	rbacService string
+	userService string
 )
 
 func main() {
@@ -30,9 +35,8 @@ func main() {
 		router.Use(gin.Logger())
 	}
 
-	InitExamFiles(router.Group("/exam-files"))
-	InitExamLog(router.Group("/exam-log"))
-	InitQuestionFiles(router.Group("/question-files"))
+	InitUsers(router.Group("/users"))
+	InitExams(router.Group("/exams"))
 
 	if err := router.Run(listenAddr); err != nil {
 		log.Fatalf("failed to start oauth2 server: %v", err)
@@ -40,11 +44,15 @@ func main() {
 }
 
 func validateOptions() {
-	platforms = util.SplitAndParse(os.Getenv("platforms"))
+	tempJwtPublicKey, err := util.DecodeBase64([]byte(os.Getenv("jwt_public_key")))
+	if err != nil {
+		log.Fatalf("invalid jwt_public_key")
+	}
+	jwtPublicKey, err = jwt.ParseRSAPublicKeyFromPEM(tempJwtPublicKey)
+	if err != nil {
+		log.Fatalf("invalid jwt_public_key")
+	}
 
-	examDbService = os.Getenv("exam_db_service")
-
-	relationService = os.Getenv("relation_service")
-
-	clientName = os.Getenv("client_name")
+	rbacService = os.Getenv("rbac_service")
+	userService = os.Getenv("user_service")
 }

@@ -101,9 +101,9 @@ DROP TABLE IF EXISTS `exams`;
 CREATE TABLE `exams` (
   `id` varchar(64) NOT NULL,
   `name` varchar(128) NOT NULL,
-  `start_time` bigint NOT NULL,
-  `end_time` bigint NOT NULL,
-  `duration` int NOT NULL,
+  `start_time` bigint unsigned NOT NULL,
+  `end_time` bigint unsigned NOT NULL,
+  `duration` int unsigned NOT NULL,
   `created_by` varchar(64) NOT NULL,
   `template` varchar(64) NOT NULL,
   `org` bigint unsigned NOT NULL,
@@ -168,40 +168,128 @@ CREATE TABLE `organizations` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `question_bank`
+-- Table structure for table `plugins`
 --
 
-DROP TABLE IF EXISTS `question_bank`;
+DROP TABLE IF EXISTS `plugins`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `question_bank` (
+CREATE TABLE `plugins` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(64) NOT NULL,
+  `url` varchar(512) NOT NULL,
+  `version` varchar(32) NOT NULL,
+  `organization` bigint unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `plugins_org_idx` (`organization`),
+  CONSTRAINT `plugins_org` FOREIGN KEY (`organization`) REFERENCES `organizations` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `pool`
+--
+
+DROP TABLE IF EXISTS `pool`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `pool` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(64) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `pool_questions`
+--
+
+DROP TABLE IF EXISTS `pool_questions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `pool_questions` (
+  `pool_id` bigint unsigned NOT NULL,
+  `question_id` bigint unsigned NOT NULL,
+  KEY `pool_questions_pool_id_idx` (`pool_id`),
+  KEY `pool_questions_question_id` (`question_id`),
+  CONSTRAINT `pool_questions_pool_id` FOREIGN KEY (`pool_id`) REFERENCES `pool` (`id`),
+  CONSTRAINT `pool_questions_question_id` FOREIGN KEY (`question_id`) REFERENCES `questions` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `pool_scopes`
+--
+
+DROP TABLE IF EXISTS `pool_scopes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `pool_scopes` (
+  `pool_id` bigint unsigned NOT NULL,
+  `scope` bigint unsigned NOT NULL,
+  `scope_type` int unsigned NOT NULL,
+  KEY `pool_scopes_pool_id_idx` (`pool_id`),
+  KEY `pool_scopes_org_idx` (`scope`),
+  CONSTRAINT `pool_scopes_group` FOREIGN KEY (`scope`) REFERENCES `groups` (`id`),
+  CONSTRAINT `pool_scopes_org` FOREIGN KEY (`scope`) REFERENCES `organizations` (`id`),
+  CONSTRAINT `pool_scopes_pool_id` FOREIGN KEY (`pool_id`) REFERENCES `pool` (`id`),
+  CONSTRAINT `pool_scopes_team` FOREIGN KEY (`scope`) REFERENCES `teams` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `pooled_set`
+--
+
+DROP TABLE IF EXISTS `pooled_set`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `pooled_set` (
+  `set_id` bigint unsigned NOT NULL,
+  `pool_id` bigint unsigned NOT NULL,
+  PRIMARY KEY (`set_id`,`pool_id`),
+  KEY `pooled_set_pool_id_idx` (`pool_id`),
+  CONSTRAINT `pooled_set_pool_id` FOREIGN KEY (`pool_id`) REFERENCES `pool` (`id`),
+  CONSTRAINT `pooled_set_set_id` FOREIGN KEY (`set_id`) REFERENCES `sets` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `question_scopes`
+--
+
+DROP TABLE IF EXISTS `question_scopes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `question_scopes` (
+  `question_id` bigint unsigned NOT NULL,
+  `scope` bigint unsigned NOT NULL,
+  `scope_type` int unsigned NOT NULL,
+  KEY `question_scopes_question_id` (`question_id`),
+  KEY `question_scopes_org_idx` (`scope`),
+  CONSTRAINT `question_scopes_group` FOREIGN KEY (`scope`) REFERENCES `groups` (`id`),
+  CONSTRAINT `question_scopes_org` FOREIGN KEY (`scope`) REFERENCES `organizations` (`id`),
+  CONSTRAINT `question_scopes_question_id` FOREIGN KEY (`question_id`) REFERENCES `questions` (`id`),
+  CONSTRAINT `question_scopes_team` FOREIGN KEY (`scope`) REFERENCES `teams` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `questions`
+--
+
+DROP TABLE IF EXISTS `questions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `questions` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `plugin_id` bigint unsigned NOT NULL,
   `title` varchar(64) NOT NULL,
   `display_data` json NOT NULL,
   `answer_data` json NOT NULL,
   `files` json NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id_UNIQUE` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `question_bank_scopes`
---
-
-DROP TABLE IF EXISTS `question_bank_scopes`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `question_bank_scopes` (
-  `question_bank_id` bigint unsigned NOT NULL,
-  `scope` bigint unsigned NOT NULL,
-  `scope_type` bigint unsigned NOT NULL,
-  KEY `question_bank_scopes_org_idx` (`scope`),
-  KEY `question_bank_scopes_id` (`question_bank_id`),
-  CONSTRAINT `question_bank_scopes_group` FOREIGN KEY (`scope`) REFERENCES `groups` (`id`),
-  CONSTRAINT `question_bank_scopes_id` FOREIGN KEY (`question_bank_id`) REFERENCES `question_bank` (`id`),
-  CONSTRAINT `question_bank_scopes_org` FOREIGN KEY (`scope`) REFERENCES `organizations` (`id`),
-  CONSTRAINT `question_bank_scopes_team` FOREIGN KEY (`scope`) REFERENCES `teams` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -228,6 +316,57 @@ CREATE TABLE `rbac` (
   CONSTRAINT `rbac_scope_org` FOREIGN KEY (`scope`) REFERENCES `organizations` (`id`),
   CONSTRAINT `rbac_scope_team` FOREIGN KEY (`scope`) REFERENCES `teams` (`id`),
   CONSTRAINT `user_id_rbac` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `set_questions`
+--
+
+DROP TABLE IF EXISTS `set_questions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `set_questions` (
+  `set_id` bigint unsigned NOT NULL,
+  `question_id` bigint unsigned NOT NULL,
+  KEY `set_questions_set_id_idx` (`set_id`),
+  KEY `set_questions_question_id` (`question_id`),
+  CONSTRAINT `set_questions_question_id` FOREIGN KEY (`question_id`) REFERENCES `questions` (`id`),
+  CONSTRAINT `set_questions_set_id` FOREIGN KEY (`set_id`) REFERENCES `sets` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `set_scopes`
+--
+
+DROP TABLE IF EXISTS `set_scopes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `set_scopes` (
+  `set_id` bigint unsigned NOT NULL,
+  `scope` bigint unsigned NOT NULL,
+  `scope_type` int unsigned NOT NULL,
+  KEY `set_scopes_set_id` (`set_id`),
+  KEY `set_scopes_org_idx` (`scope`),
+  CONSTRAINT `set_scopes_group` FOREIGN KEY (`scope`) REFERENCES `groups` (`id`),
+  CONSTRAINT `set_scopes_org` FOREIGN KEY (`scope`) REFERENCES `organizations` (`id`),
+  CONSTRAINT `set_scopes_set_id` FOREIGN KEY (`set_id`) REFERENCES `sets` (`id`),
+  CONSTRAINT `set_scopes_team` FOREIGN KEY (`scope`) REFERENCES `teams` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `sets`
+--
+
+DROP TABLE IF EXISTS `sets`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `sets` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(64) NOT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -261,9 +400,6 @@ DROP TABLE IF EXISTS `students`;
 CREATE TABLE `students` (
   `id` varchar(64) NOT NULL,
   `team_id` bigint unsigned NOT NULL,
-  `name` varchar(45) DEFAULT NULL,
-  `email` varchar(45) DEFAULT NULL,
-  `phone` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `team_id_idx` (`team_id`),
   CONSTRAINT `team_id` FOREIGN KEY (`team_id`) REFERENCES `teams` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -282,6 +418,7 @@ CREATE TABLE `teams` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `group_id` bigint unsigned NOT NULL,
   `name` varchar(128) NOT NULL,
+  `display_name` varchar(45) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id_UNIQUE` (`id`),
   KEY `group_id_idx` (`group_id`),
@@ -301,6 +438,7 @@ CREATE TABLE `users` (
   `email` varchar(320) NOT NULL,
   `type` int unsigned NOT NULL,
   `password` varchar(128) NOT NULL,
+  `name` varchar(128) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id_UNIQUE` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -315,4 +453,4 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2021-10-26 10:38:48
+-- Dump completed on 2021-11-02 15:01:06
