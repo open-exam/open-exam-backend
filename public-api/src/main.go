@@ -2,12 +2,13 @@ package main
 
 import (
 	"crypto/rsa"
+	"log"
+	"os"
+
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	"github.com/open-exam/open-exam-backend/shared"
 	"github.com/open-exam/open-exam-backend/util"
-	"log"
-	"os"
 )
 
 var (
@@ -15,6 +16,8 @@ var (
 	jwtPublicKey *rsa.PublicKey
 	rbacService string
 	userService string
+	fsService string
+	examService string
 )
 
 func main() {
@@ -37,6 +40,7 @@ func main() {
 
 	InitUsers(router.Group("/users"))
 	InitExams(router.Group("/exams"))
+	InitExamTemplates(router.Group("/exam-template"))
 
 	if err := router.Run(listenAddr); err != nil {
 		log.Fatalf("failed to start oauth2 server: %v", err)
@@ -55,4 +59,6 @@ func validateOptions() {
 
 	rbacService = os.Getenv("rbac_service")
 	userService = os.Getenv("user_service")
+	fsService = os.Getenv("fs_service")
+	examService = os.Getenv("exam_service")
 }

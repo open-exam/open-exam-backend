@@ -95,7 +95,6 @@ func (s *Server) CanAccessExam(ctx context.Context, req *pb.CanAccessExamRequest
 	return fillScope()
 }
 
-
 func (s *Server) CanAccessScope(ctx context.Context, req *pb.CanAccessScopeRequest) (*sharedPb.StandardStatusResponse, error) {
 	
 	if len(req.UserId) == 0 || req.Scope == 0 {
@@ -163,3 +162,43 @@ func (s *Server) CanAccessScope(ctx context.Context, req *pb.CanAccessScopeReque
 		Status: false,
 	}, nil
 }
+
+func (s *Server) CanAccessTemplate(ctx context.Context, req *pb.CanAccessTemplateRequest) (*sharedPb.StandardStatusResponse, error) {
+	if len(req.UserId) == 0 || len(req.TemplateId) == 0 {
+		return nil, errors.New("invalid request")
+	}
+
+	rows, err := db.Query("SELECT scope, scope_type FROM exam_template_scopes WHERE exam_template_id=?", req.TemplateId)
+	if err != nil {
+		return nil, err
+	}
+
+	validScope := false
+	for rows.Next() {
+		var scope uint64
+		rows.Scan(&scope)
+		res, err := s.CanAccessScope(ctx, &pb.CanAccessScopeRequest {
+			UserId: req.UserId,
+			Scope: scope,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		if res.Status {
+			validScope = true
+			break
+		}
+	}
+
+	if !validScope {
+		return &sharedPb.StandardStatusResponse {
+			Status: false,
+			Message: "user does not have access to this template",
+		}, nil
+	}
+
+	return &sharedPb.StandardStatusResponse {
+		Status: true,
+	}, nil
+}	

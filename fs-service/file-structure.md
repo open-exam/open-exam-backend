@@ -16,4 +16,7 @@
 │   ├── organization_id
 │        ├── question_id
 │             ├── files
+├── exam-templates
+    ├── organization_id
+        ├── template_id.json
 </pre>

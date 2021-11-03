@@ -16,6 +16,7 @@ service ExamService {
 
 service ExamTemplate {
     rpc createTemplate (CreateExamTemplateRequest) returns (StandardIdResponse) {};
+    rpc validateTemplate (StandardIdRequest) returns (StandardStatusResponse) {};
 }
 
 message CheckValidRequest {
@@ -54,8 +55,7 @@ message CreateExamRequest {
 
 message CreateExamTemplateRequest {
     string name = 1;
-    string template = 2;
-    repeated Scope scopes = 3;
+    repeated Scope scopes = 2;
 }
 
 message Scope {
