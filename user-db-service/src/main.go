@@ -20,7 +20,8 @@ func main() {
 
 	validateOptions()
 
-	shared.DefaultGrpcServer(db, func(server *grpc.Server) {
+	shared.DefaultGrpcServer(func(server *grpc.Server) {
+		db = shared.Db
 		s, _ := NewServer()
 		pb.RegisterUserServiceServer(server, s)
 	})

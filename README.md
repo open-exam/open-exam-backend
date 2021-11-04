@@ -1,4 +1,7 @@
 # open-exam-backend
+[![SonarCloud](https://sonarcloud.io/images/project_badges/sonarcloud-black.svg)](https://sonarcloud.io/summary/new_code?id=open-exam_open-exam-backend)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=open-exam_open-exam-backend&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=open-exam_open-exam-backend)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=open-exam_open-exam-backend&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=open-exam_open-exam-backend)
 
 |Public APIs CI Status |
 |---	|

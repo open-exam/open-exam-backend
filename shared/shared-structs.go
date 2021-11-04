@@ -13,6 +13,11 @@ var (
 	gridTypes = []string{"plugin", "box"}
 )
 
+type UserJWT struct {
+	UserId string
+	Scope uint64
+}
+
 type Exam struct {
 	Sections []SectionIntermediate
 }

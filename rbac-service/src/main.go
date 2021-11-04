@@ -16,12 +16,12 @@ var (
 )
 
 func main() {
-
 	shared.SetEnv(&mode)
 
 	validateOptions()
 
-	shared.DefaultGrpcServer(db, func(server *grpc.Server) {
+	shared.DefaultGrpcServer(func(server *grpc.Server) {
+		db = shared.Db
 		s, _ := NewServer()
 		pb.RegisterRbacServiceServer(server, s)
 	})

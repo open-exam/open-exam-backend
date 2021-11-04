@@ -18,12 +18,13 @@ var (
 	userService string
 	fsService string
 	examService string
+	pluginDbService string
 )
 
 func main() {
 	shared.SetEnv(&mode)
 	gin.SetMode(gin.DebugMode)
-
+	
 	if mode == "prod" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -41,6 +42,7 @@ func main() {
 	InitUsers(router.Group("/users"))
 	InitExams(router.Group("/exams"))
 	InitExamTemplates(router.Group("/exam-template"))
+	InitPlugins(router.Group("/plugins"))
 
 	if err := router.Run(listenAddr); err != nil {
 		log.Fatalf("failed to start oauth2 server: %v", err)
@@ -61,4 +63,5 @@ func validateOptions() {
 	userService = os.Getenv("user_service")
 	fsService = os.Getenv("fs_service")
 	examService = os.Getenv("exam_service")
+	pluginDbService = os.Getenv("plugin_db_service")
 }

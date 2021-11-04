@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+option go_package = "github.com/open-exam/open-exam-backend/container-build-service/grpc-container-build-service;grpc_container_build_service";
+
+import "shared.proto";
+
+service Container {
+    rpc build(StandardIdRequest) returns (StandardStatusResponse) {};
+    rpc exists(StandardIdRequest) returns (StandardStatusResponse) {};
+}
