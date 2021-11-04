@@ -41,6 +41,7 @@ func main() {
 	InitUsers(router.Group("/users"))
 	InitExams(router.Group("/exams"))
 	InitExamTemplates(router.Group("/exam-template"))
+	InitPlugins(router.Group("/plugins"))
 
 	if err := router.Run(listenAddr); err != nil {
 		log.Fatalf("failed to start oauth2 server: %v", err)
