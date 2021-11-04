@@ -79,3 +79,18 @@ func CreateMultipartForm(form map[string]string) (string, io.Reader, error) {
 	}
 	return mp.FormDataContentType(), body, nil
 }
+
+func SqlArrayJoin(items []string) (string, []interface{}) {
+	args := make([]interface{}, len(items))
+	for i, id := range items {
+		args[i] = id
+	}
+	return strings.Repeat(", ?", len(args) - 1), args
+}
+
+func Prepend(x []interface{}, y interface{}) []interface{} {
+    x = append(x, "")
+    copy(x[1:], x)
+    x[0] = y
+    return x
+}
