@@ -177,9 +177,11 @@ DROP TABLE IF EXISTS `plugins`;
 CREATE TABLE `plugins` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(64) NOT NULL,
-  `url` varchar(512) NOT NULL,
+  `uri` varchar(512) NOT NULL,
+  `uri_type` varchar(16) NOT NULL,
   `version` varchar(32) NOT NULL,
-  `organization` bigint unsigned NOT NULL,
+  `organization` bigint unsigned DEFAULT NULL,
+  `build_status` tinyint NOT NULL,
   PRIMARY KEY (`id`),
   KEY `plugins_org_idx` (`organization`),
   CONSTRAINT `plugins_org` FOREIGN KEY (`organization`) REFERENCES `organizations` (`id`)
@@ -453,4 +455,4 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2021-11-02 15:01:06
+-- Dump completed on 2021-11-04 14:55:47
