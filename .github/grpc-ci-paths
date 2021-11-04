@@ -1,4 +1,6 @@
 user-db-service
 exam-db-service
+plugin-db-service
 relation-service
 rbac-service
+container-build-service
