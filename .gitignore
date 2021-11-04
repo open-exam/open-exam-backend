@@ -10,5 +10,7 @@ Cargo.lock
 **/*.rs.bk
 .vscode
 .idea
+*.dev.env*
+*.prod.env*
 *.prod*
 *.pb.go
