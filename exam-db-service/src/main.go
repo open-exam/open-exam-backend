@@ -14,10 +14,10 @@ var (
 )
 
 func main() {
-
 	shared.SetEnv(&mode)
 
-	shared.DefaultGrpcServer(db, func(server *grpc.Server) {
+	shared.DefaultGrpcServer(func(server *grpc.Server) {
+		db = shared.Db
 		sExamClient, _ := NewExamClientAccessServer()
 		sExamService, _ := NewExamServiceServer()
 		sExamTemplate, _ := NewExamTemplateServer()

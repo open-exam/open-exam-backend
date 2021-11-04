@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+option go_package = "github.com/open-exam/open-exam-backend/plugin-db-service/grpc-plugin-db-service;grpc_plugin_db_service";
+
+import "shared.proto";
+
+service PluginService {
+    rpc addPlugin (Plugin) returns (StandardIdResponse) {};
+    rpc updateStatus (UpdateStatus) returns (StandardStatusResponse) {};
+}
+
+message Plugin {
+    string name = 1;
+    string uri = 2;
+    string uriType = 3;
+    string version = 4;
+    uint64 organization = 5;
+}
+
+message UpdateStatus {
+    uint64 id = 1;
+    bool status = 2;
+}
