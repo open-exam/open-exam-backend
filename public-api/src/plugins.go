@@ -22,6 +22,16 @@ type Plugin struct {
 	Organization uint64 `json:"organization" binding:"required"`
 }
 
+type GetPlugins struct {
+	Name string `json:"name" binding:"required"`
+	Uri string `json:"uri" binding:"required"`
+	UriType string `json:"uri_type" binding:"required"`
+	Version string `json:"version" binding:"required"`
+	BuildStatus bool `json:"build_status" binding:"required"`
+	Page int32 `json:"page" binding:"required"`
+	NumPerPage int32 `json:"num_per_page" binding:"required"`
+}
+
 func InitPlugins(router *gin.RouterGroup) {
 	router.Use(shared.JwtMiddleware(jwtPublicKey, mode))
 
@@ -102,7 +112,33 @@ func addPlugin(ctx *gin.Context) {
 }
 
 func getPlugins(ctx *gin.Context) {
-	ctx.JSON(200, gin.H{
-		"message": "pong",
+	getPlugins := &GetPlugins{}
+	if err := ctx.BindJSON(&getPlugins); err != nil {
+		ctx.AbortWithStatusJSON(400, err)
+		return
+	}
+
+	conn, err := shared.GetGrpcConn(pluginDbService)
+	if err != nil {
+		ctx.AbortWithStatusJSON(500, shared.GinErrors.ServiceConnection)
+		return
+	}
+
+	client := pluginDbPb.NewPluginServiceClient(conn)
+	res, err := client.GetPlugins(context.Background(), &pluginDbPb.GetPluginsRequest {
+		Name: getPlugins.Name,
+		Uri: getPlugins.Uri,
+		UriType: getPlugins.UriType,
+		Version: getPlugins.Version,
+		BuildStatus: getPlugins.BuildStatus,
+		Page: getPlugins.Page,
+		NumPerPage: getPlugins.NumPerPage,
 	})
+
+	if err != nil {
+		ctx.AbortWithStatusJSON(400, err)
+		return
+	}
+
+	ctx.JSON(200, res)
 }
