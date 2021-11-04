@@ -9,6 +9,7 @@ import (
 	pb "github.com/open-exam/open-exam-backend/rbac-service/grpc-rbac-service"
 	relationPb "github.com/open-exam/open-exam-backend/relation-service/grpc-relation-service"
 	"github.com/open-exam/open-exam-backend/shared"
+	"github.com/open-exam/open-exam-backend/util"
 )
 
 var (
@@ -50,7 +51,6 @@ func (s *Server) DoesRoleExist(ctx context.Context, req *pb.RoleExistRequest) (*
 }
 
 func (s *Server) CanPerformOperation(ctx context.Context, req *pb.CanPerformOperationRequest) (*sharedPb.StandardStatusResponse, error) {
-
 	Ids := make([]uint64, 0)
 
 	if req.OperationId > 0 {
@@ -65,7 +65,9 @@ func (s *Server) CanPerformOperation(ctx context.Context, req *pb.CanPerformOper
 			return nil, errors.New("resource and operation is required")
 		}
 
-		rows, err := db.Query("SELECT id FROM operations WHERE resource=? AND operation IN (?)", req.Resource, req.Operation)
+		queryArr, dataArr := util.SqlArrayJoin(req.Operation)
+		dataArr = util.Prepend(dataArr, req.Resource)
+		rows, err := db.Query("SELECT id FROM operations WHERE resource=? AND operation IN (?" + queryArr + ")", dataArr...)
 		if err != nil {
 			return nil, err
 		}

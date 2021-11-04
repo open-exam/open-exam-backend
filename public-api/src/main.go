@@ -18,12 +18,13 @@ var (
 	userService string
 	fsService string
 	examService string
+	pluginDbService string
 )
 
 func main() {
 	shared.SetEnv(&mode)
 	gin.SetMode(gin.DebugMode)
-
+	
 	if mode == "prod" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -62,4 +63,5 @@ func validateOptions() {
 	userService = os.Getenv("user_service")
 	fsService = os.Getenv("fs_service")
 	examService = os.Getenv("exam_service")
+	pluginDbService = os.Getenv("plugin_db_service")
 }
