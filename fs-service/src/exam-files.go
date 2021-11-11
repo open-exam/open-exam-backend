@@ -12,19 +12,19 @@ import (
 )
 
 var (
-	unknownError = gin.H {
+	unknownError = gin.H{
 		"error": "an unknown error occurred",
 	}
-	platforms []string
+	platforms       []string
 	arch            []string
 	examDbService   string
 	relationService string
-	clientName string
+	clientName      string
 )
 
 type GetClient struct {
 	Platform string `form:"platform"`
-	Arch string `form:"arch"`
+	Arch     string `form:"arch"`
 	AccessId string `form:"access_id"`
 }
 
@@ -37,21 +37,21 @@ func getExamClient(ctx *gin.Context) {
 
 	if ctx.BindQuery(&getClient) == nil {
 		if len(getClient.Platform) == 0 || util.IsInList(getClient.Platform, &platforms) == -1 {
-			ctx.JSON(400, gin.H {
+			ctx.JSON(400, gin.H{
 				"error": "invalid platform",
 			})
 			return
 		}
 
 		if len(getClient.Arch) == 0 || util.IsInList(getClient.Arch, &arch) == -1 {
-			ctx.JSON(400, gin.H {
+			ctx.JSON(400, gin.H{
 				"error": "invalid arch",
 			})
 			return
 		}
 
 		if len(getClient.AccessId) == 0 {
-			ctx.JSON(400, gin.H {
+			ctx.JSON(400, gin.H{
 				"error": "access id is required",
 			})
 			return

@@ -49,7 +49,7 @@ func addExamTemplate(ctx *gin.Context) {
 	buf := make([]byte, files[0].Size)
 	file, err := files[0].Open()
 	if err != nil {
-		ctx.AbortWithStatusJSON(400, gin.H {
+		ctx.AbortWithStatusJSON(400, gin.H{
 			"error": shared.GinErrors.UnknownError,
 		})
 		return
@@ -57,15 +57,15 @@ func addExamTemplate(ctx *gin.Context) {
 
 	n, err := file.Read(buf)
 	if err != nil || n == 0 {
-		ctx.AbortWithStatusJSON(400, gin.H {
+		ctx.AbortWithStatusJSON(400, gin.H{
 			"error": shared.GinErrors.UnknownError,
 		})
 		return
 	}
 
-	err = os.WriteFile("/app-data/exam-templates/" + orgIds[0] + "/" + files[0].Filename, buf, 0644)
+	err = os.WriteFile("/app-data/exam-templates/"+orgIds[0]+"/"+files[0].Filename, buf, 0644)
 	if err != nil {
-		ctx.AbortWithStatusJSON(400, gin.H {
+		ctx.AbortWithStatusJSON(400, gin.H{
 			"error": shared.GinErrors.UnknownError,
 		})
 		return

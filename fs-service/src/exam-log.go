@@ -16,7 +16,7 @@ import (
 type LogData struct {
 	UserId string `json:"user_id"`
 	ExamId string `json:"exam_id"`
-	Data string `json:"data"`
+	Data   string `json:"data"`
 }
 
 func InitExamLog(router *gin.RouterGroup) {
@@ -61,8 +61,8 @@ func appendLog(ctx *gin.Context) {
 		}
 
 		rescanAccessExam, err := client.CanAccessExam(context.Background(), &relationPb.CanAccessExamRequest{
-			UserId: log.UserId,
-			ExamId: log.ExamId,
+			UserId:     log.UserId,
+			ExamId:     log.ExamId,
 			VerifyTime: true,
 		})
 
@@ -81,7 +81,7 @@ func appendLog(ctx *gin.Context) {
 		logFilePath := "/app-data/exam-logs/" + strconv.FormatUint(res,
 			10) + "/" + log.ExamId + "/" + log.UserId + ".log"
 
-		f, err := os.OpenFile(logFilePath , os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		f, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			ctx.JSON(500, unknownError)
 			return
@@ -139,7 +139,7 @@ func getUserLog(ctx *gin.Context) {
 }
 
 func dataNotGiven(text string, ctx *gin.Context) {
-	ctx.JSON(400, gin.H {
+	ctx.JSON(400, gin.H{
 		"error": text + " not given",
 	})
 }
