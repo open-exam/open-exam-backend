@@ -25,3 +25,10 @@ jobs:
           args: --all-features
       - name: Build
         run: dev/mold -run cargo build -p={{ROUTE}}
+      - name: rustfmt
+        run: cargo fmt
+      - name: Auto commit
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: rustfmt
+          branch: ${{ github.head_ref }}

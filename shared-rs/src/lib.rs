@@ -36,5 +36,3 @@ pub mod shared {
         }
     }
 }
-
-pub mod redis;
