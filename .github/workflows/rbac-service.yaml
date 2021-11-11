@@ -33,7 +33,7 @@ jobs:
           cd rbac-service/src
           go build *
       - name: gofmt
-        run: gofmt -w src/*
+        run: gofmt -w rbac-service/src/*
       - name: Auto commit
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
