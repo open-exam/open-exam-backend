@@ -1,6 +1,6 @@
-use std::{sync::Arc};
 use aes::Aes128;
-use block_modes::{BlockMode, Cbc, block_padding::Pkcs7};
+use block_modes::{block_padding::Pkcs7, BlockMode, Cbc};
+use std::sync::Arc;
 use tokio::{io::AsyncReadExt, net::TcpStream, sync::Mutex};
 use x448::{PublicKey, Secret};
 use xactor::*;
@@ -25,7 +25,13 @@ pub struct InitClient;
 #[async_trait::async_trait]
 impl Handler<InitClient> for Client {
     async fn handle(&mut self, _: &mut Context<Self>, _: InitClient) -> (u32, String) {
-        let n = self.stream.lock().await.read_u32().await.unwrap_or_else(|_| 0);
+        let n = self
+            .stream
+            .lock()
+            .await
+            .read_u32()
+            .await
+            .unwrap_or_else(|_| 0);
         if n == 0 {
             return (400, "Invalid request".to_string());
         }
@@ -53,7 +59,7 @@ impl Handler<InitClient> for Client {
 
         self.key = Some(*res.unwrap().as_bytes());
 
-        use byteorder::{WriteBytesExt, BigEndian};
+        use byteorder::{BigEndian, WriteBytesExt};
         use std::io::Write;
 
         let mut buf = Vec::new();
@@ -81,18 +87,20 @@ impl Handler<Request> for Client {
         }
 
         let mut buf = Vec::new();
-        let service = self.stream.lock().await.read_u32().await.unwrap_or_else(|_| 0);
+        let service = self
+            .stream
+            .lock()
+            .await
+            .read_u32()
+            .await
+            .unwrap_or_else(|_| 0);
         self.stream.lock().await.read(&mut buf).await.unwrap();
 
         let raw_data = decrypt(buf, &self.key.unwrap()[..]);
-        
-        match service {
-            1 => {
 
-            },
-            2 => {
-                
-            },
+        match service {
+            1 => {}
+            2 => {}
             _ => {}
         }
     }
@@ -104,10 +112,14 @@ pub struct Notification(pub String);
 #[async_trait::async_trait]
 impl Handler<Notification> for Client {
     async fn handle(&mut self, _: &mut Context<Self>, req: Notification) -> () {
-        use byteorder::{WriteBytesExt, BigEndian};
+        use byteorder::{BigEndian, WriteBytesExt};
         use std::io::Write;
 
-        shared_rs::shared::write(&self.stream, &encrypt(req.0.as_bytes().to_vec(), &self.key.unwrap()[..])).await;
+        shared_rs::shared::write(
+            &self.stream,
+            &encrypt(req.0.as_bytes().to_vec(), &self.key.unwrap()[..]),
+        )
+        .await;
     }
 }
 
@@ -126,5 +138,7 @@ fn encrypt(mut buf: Vec<u8>, key: &[u8]) -> Vec<u8> {
     let iv = shared_rs::shared::random_bytes(4);
     let cipher = Aes128Cbc::new_from_slices(&key, &iv.to_vec()).unwrap();
     let pos = buf.len();
-    iv.into_iter().chain(cipher.encrypt(&mut buf, pos).unwrap().to_vec().into_iter()).collect::<Vec<u8>>()
+    iv.into_iter()
+        .chain(cipher.encrypt(&mut buf, pos).unwrap().to_vec().into_iter())
+        .collect::<Vec<u8>>()
 }
