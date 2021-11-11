@@ -9,3 +9,4 @@ edition = "2021"
 tokio = { version = "1.13.0", features = ["full"] }
 byteorder = "1.4.3"
 rand = "0.8.4"
+redis = { version = "0.21.4", features = ["cluster", "tokio-comp"] }

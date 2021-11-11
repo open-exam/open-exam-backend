@@ -22,8 +22,6 @@ import (
 	"github.com/mholt/archiver/v3"
 	rbacPb "github.com/open-exam/open-exam-backend/rbac-service/grpc-rbac-service"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/health"
-	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 )
 
 type GinErrorList struct {
@@ -123,10 +121,6 @@ func DefaultGrpcServer(registerComponents func(*grpc.Server)) {
 
 	grpcServer := grpc.NewServer()
 
-	hs := health.NewServer()
-	hs.SetServingStatus("grpc.health.v1.user-db-service", 1)
-	healthpb.RegisterHealthServer(grpcServer, hs)
-
 	registerComponents(grpcServer)
 
 	if err := grpcServer.Serve(lis); err != nil {
@@ -141,6 +135,7 @@ func GetGrpcConn(connectionString string) (*grpc.ClientConn, error) {
 	}
 	return conn, err
 }
+
 
 func JwtMiddleware(publicKey *rsa.PublicKey, mode string) gin.HandlerFunc {
 	return func (ctx *gin.Context) {
