@@ -21,4 +21,5 @@ block-modes = "0.8.1"
 redis = { version = "0.21.4", features = ["cluster", "streams"] }
 jsonwebtoken = "7.2.0"
 serde = "1.0.130"
+lazy_static = "1.4.0"
 shared-rs = { path = "../shared-rs" }

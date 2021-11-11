@@ -1,4 +1,5 @@
 use std::{net::SocketAddr, sync::Arc, thread};
+use jsonwebtoken::DecodingKey;
 use net2::{TcpBuilder, unix::UnixTcpBuilderExt};
 use redis::{Commands, RedisResult, Value, cluster::ClusterClient, streams::{StreamReadOptions, StreamReadReply}};
 use serde::{Deserialize, Serialize};
@@ -6,6 +7,9 @@ use tokio::{net::{TcpListener, TcpStream}, sync::{Mutex, broadcast::{self, Recei
 use xactor::*;
 
 mod client_handler;
+
+#[macro_use]
+extern crate lazy_static;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Claims {
@@ -21,6 +25,12 @@ struct Claims {
 struct Notification {
     user_id: String,
     data: String
+}
+
+lazy_static! {
+    static ref JWT_PUBLIC_KEY: Vec<u8> = {
+        std::env::var("jwt_public_key").ok().unwrap().as_bytes().to_vec()
+    };
 }
 
 fn main() {
@@ -57,8 +67,11 @@ fn main() {
     let mut threads = Vec::new();
     let (tx, rx) = broadcast::channel::<Notification>(16);
 
+    let rsa_pub_key = DecodingKey::from_rsa_pem(&JWT_PUBLIC_KEY[..]).unwrap();
+    
     for i in 0..num_cpus::get() {
         let tx = tx.clone();
+        let rsa_copy = rsa_pub_key.clone();
         threads.push(thread::spawn(move || {
             println!("Starting worker thread {}", i);
 
@@ -77,7 +90,7 @@ fn main() {
 
                 loop {
                     if let Ok((socket, addr)) = listener.accept().await {
-                        tokio::spawn(process(socket, i, addr,  tx.subscribe()));
+                        tokio::spawn(process(socket, i, addr,  tx.subscribe(), rsa_copy.clone()));
                     }
                 }
             });
@@ -147,7 +160,7 @@ fn main() {
     }
 }
 
-async fn process(socket: TcpStream, worker_id: usize, addr: SocketAddr, mut rx: Receiver<Notification>) {
+async fn process(socket: TcpStream, worker_id: usize, addr: SocketAddr, mut rx: Receiver<Notification>, rsa_pub_key: DecodingKey<'_>) {
     let socket = Arc::new(Mutex::new(socket));
     let ctx = client_handler::Client {
         id: worker_id,
@@ -165,7 +178,7 @@ async fn process(socket: TcpStream, worker_id: usize, addr: SocketAddr, mut rx: 
 
         {
             use jsonwebtoken::{decode, DecodingKey, Validation, Algorithm};
-            let token = decode::<Claims>(&init.1, &DecodingKey::from_secret("secret".as_ref()), &Validation::new(Algorithm::RS256));
+            let token = decode::<Claims>(&init.1, &rsa_pub_key, &Validation::new(Algorithm::RS256));
             if let Ok(token_data) = token {
                 user_id = token_data.claims.user;
             }

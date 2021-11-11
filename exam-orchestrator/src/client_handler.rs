@@ -91,11 +91,9 @@ impl Handler<Request> for Client {
 
             },
             2 => {
-
+                
             },
-            _ => {
-
-            }
+            _ => {}
         }
     }
 }
