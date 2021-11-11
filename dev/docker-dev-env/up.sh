@@ -5,7 +5,7 @@ echo "yes" | redis-cli --cluster create $(for ind in `seq 1 6`; do \
                    echo -n "$(docker inspect -f \
                    '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
                    docker-dev-env_redis-$ind\_1)"':6379 '; \
-                   done) --cluster-replicas 1 -a test
+                   done) --cluster-replicas 1 -a open_exam
 
 for ind in $(seq 1 6); do
   echo -n docker-dev-env_redis-$ind\_1 " "

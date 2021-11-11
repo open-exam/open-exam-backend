@@ -4,3 +4,4 @@ plugin-db-service
 relation-service
 rbac-service
 container-build-service
+email-service

@@ -10,6 +10,7 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/joho/godotenv v1.4.0
 	github.com/mholt/archiver/v3 v3.5.1
+	github.com/xhit/go-simple-mail/v2 v2.10.0
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 	google.golang.org/grpc v1.41.0
 	google.golang.org/protobuf v1.27.1

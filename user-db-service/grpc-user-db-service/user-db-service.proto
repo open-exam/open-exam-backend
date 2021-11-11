@@ -9,6 +9,15 @@ service UserService {
     rpc createUser (stream User) returns (stream User) {};
     rpc addUserToScope (stream AddUser) returns (stream StandardStatusResponse) {};
     rpc getUser(StandardIdRequest) returns (DetailedUser) {};
+    rpc batchGetEmails(BatchGetEmailsRequest) returns (BatchGetEmailsResponse) {};
+}
+
+message BatchGetEmailsRequest {
+    repeated string ids = 1;
+}
+
+message BatchGetEmailsResponse {
+    repeated string emails = 1;
 }
 
 message FindOneRequest {
