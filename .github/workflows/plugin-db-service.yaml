@@ -32,3 +32,10 @@ jobs:
         run: |-
           cd plugin-db-service/src
           go build *
+      - name: gofmt
+        run: gofmt -w src/*
+      - name: Auto commit
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: gofmt
+          branch: ${{ github.head_ref }}

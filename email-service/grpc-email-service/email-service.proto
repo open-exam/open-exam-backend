@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+option go_package = "github.com/open-exam/open-exam-backend/email-service/grpc-email-service;grpc_email_service";
+
+import "shared.proto";
+
+service EmailService {
+    rpc sendEmail(EmailRequest) returns (SendEmailResponse) {};
+}
+
+message EmailRequest {
+    repeated string users = 1;
+    uint64 templateId = 2;
+    string subject = 3;
+    repeated Variable vars = 4;
+}
+
+message Variable {
+    map<string, string> values = 1;
+}
+
+message SendEmailResponse {
+    repeated string failed = 1;
+}

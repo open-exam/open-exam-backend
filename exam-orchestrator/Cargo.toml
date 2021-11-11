@@ -1,0 +1,25 @@
+[package]
+name = "exam-orchestrator"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "1.13.0", features = ["full"] }
+dotenv = "0.15.0"
+num_cpus = "1.13.0"
+net2 = "0.2.37"
+rand = "0.8.4"
+xactor = "0.7.11"
+async-trait = "0.1.51"
+byteorder = "1.4.3"
+x448 = "0.6.0"
+rand_dh = { package = "rand_core", version = "0.5", default-features = false, features = ["getrandom"] } 
+aes = "0.7.5"
+block-modes = "0.8.1"
+redis = { version = "0.21.4", features = ["cluster", "streams"] }
+jsonwebtoken = "7.2.0"
+serde = "1.0.130"
+lazy_static = "1.4.0"
+shared-rs = { path = "../shared-rs" }
