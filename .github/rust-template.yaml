@@ -19,7 +19,7 @@ jobs:
           components: rustfmt, clippy
       - name: rustfmt
         run: cargo fmt
-        working-directory: "{{ROUTE}}/src"
+        working-directory: {{ROUTE}}
       - name: Auto commit
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
