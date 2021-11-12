@@ -17,14 +17,6 @@ jobs:
         with:
           toolchain: stable
           components: rustfmt, clippy
-      - name: rustfmt
-        run: cargo fmt
-        working-directory: exam-orchestrator
-      - name: Auto commit
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: rustfmt
-          branch: ${{ github.head_ref }}
       - uses: Swatinem/rust-cache@v1
       - name: Clippy
         uses: actions-rs/clippy-check@v1
