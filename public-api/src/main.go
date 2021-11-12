@@ -12,19 +12,19 @@ import (
 )
 
 var (
-	mode = "prod"
-	jwtPublicKey *rsa.PublicKey
-	rbacService string
-	userService string
-	fsService string
-	examService string
+	mode            = "prod"
+	jwtPublicKey    *rsa.PublicKey
+	rbacService     string
+	userService     string
+	fsService       string
+	examService     string
 	pluginDbService string
 )
 
 func main() {
 	shared.SetEnv(&mode)
 	gin.SetMode(gin.DebugMode)
-	
+
 	if mode == "prod" {
 		gin.SetMode(gin.ReleaseMode)
 	}

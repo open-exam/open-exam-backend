@@ -26,31 +26,31 @@ import (
 
 type GinErrorList struct {
 	ServiceConnection gin.H
-	UnknownError gin.H
-	JsonParseError gin.H
+	UnknownError      gin.H
+	JsonParseError    gin.H
 }
 
 type StandardErrorList struct {
 	ServiceConnection error
-	UnknownError error
+	UnknownError      error
 }
 
 var (
 	errUnexpectedSigningMethod = errors.New("unknown signing method")
 	GinErrors                  = GinErrorList{
-		ServiceConnection: gin.H {
+		ServiceConnection: gin.H{
 			"error": "could not connect to internal service",
 		},
-		UnknownError: gin.H {
+		UnknownError: gin.H{
 			"error": "an unknown error occurred",
 		},
-		JsonParseError: gin.H {
+		JsonParseError: gin.H{
 			"error": "could not parse JSON",
 		},
 	}
-	Errors = StandardErrorList {
+	Errors = StandardErrorList{
 		ServiceConnection: errors.New("could not connect to service"),
-		UnknownError: errors.New("an unknown error occurred"),
+		UnknownError:      errors.New("an unknown error occurred"),
 	}
 	Db *sql.DB
 )
@@ -77,25 +77,24 @@ func SetEnv(mode *string) {
 
 func DefaultGrpcServer(registerComponents func(*grpc.Server)) {
 	var err error
-	
-	var (
-		dbUser = os.Getenv("db_user")
-		dbPasswd = os.Getenv("db_pass")
-		dbHost = os.Getenv("db_host")
-		dbPort = os.Getenv("db_port")
-		listenAddr = os.Getenv("listen_addr")
 
+	var (
+		dbUser     = os.Getenv("db_user")
+		dbPasswd   = os.Getenv("db_pass")
+		dbHost     = os.Getenv("db_host")
+		dbPort     = os.Getenv("db_port")
+		listenAddr = os.Getenv("listen_addr")
 	)
 
 	log.Println("service starting...")
 
 	dbAddr := net.JoinHostPort(dbHost, dbPort)
 	dbConfig := mysql.Config{
-		User:      dbUser,
-		Passwd:    dbPasswd,
-		Net:       "tcp",
-		Addr:      dbAddr,
-		DBName:    "open_exam",
+		User:   dbUser,
+		Passwd: dbPasswd,
+		Net:    "tcp",
+		Addr:   dbAddr,
+		DBName: "open_exam",
 	}
 
 	for {
@@ -113,7 +112,7 @@ func DefaultGrpcServer(registerComponents func(*grpc.Server)) {
 		log.Println("error connecting to the database, retrying in 5 secs...")
 		time.Sleep(5 * time.Second)
 	}
-	
+
 	lis, err := net.Listen("tcp", listenAddr)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -136,9 +135,8 @@ func GetGrpcConn(connectionString string) (*grpc.ClientConn, error) {
 	return conn, err
 }
 
-
 func JwtMiddleware(publicKey *rsa.PublicKey, mode string) gin.HandlerFunc {
-	return func (ctx *gin.Context) {
+	return func(ctx *gin.Context) {
 		if mode == "dev" {
 			ctx.Set("user", UserJWT{UserId: "1", Scope: 34535})
 			ctx.Next()
@@ -158,7 +156,7 @@ func JwtMiddleware(publicKey *rsa.PublicKey, mode string) gin.HandlerFunc {
 		}
 
 		tok, err := jwt.Parse(strings.TrimSpace(splitHeader[1]),
-			func (jwtToken *jwt.Token) (interface{}, error) {
+			func(jwtToken *jwt.Token) (interface{}, error) {
 				if _, ok := jwtToken.Method.(*jwt.SigningMethodRSA); !ok {
 					return nil, errUnexpectedSigningMethod
 				}
@@ -191,7 +189,7 @@ func RBACMiddleware(rbacService string, resource string, operations []string) gi
 
 	rbacClient := rbacPb.NewRbacServiceClient(conn)
 
-	return func (ctx *gin.Context) {
+	return func(ctx *gin.Context) {
 		user, exists := ctx.Get("user")
 		if !exists {
 			ctx.AbortWithStatus(401)
@@ -199,10 +197,10 @@ func RBACMiddleware(rbacService string, resource string, operations []string) gi
 		}
 
 		res, err := rbacClient.CanPerformOperation(context.Background(), &rbacPb.CanPerformOperationRequest{
-			UserId: user.(UserJWT).UserId,
-			Resource: resource,
+			UserId:    user.(UserJWT).UserId,
+			Resource:  resource,
 			Operation: operations,
-			Scope: user.(UserJWT).Scope,
+			Scope:     user.(UserJWT).Scope,
 		})
 
 		if err != nil {
@@ -221,7 +219,8 @@ func RBACMiddleware(rbacService string, resource string, operations []string) gi
 
 func GetPluginSources(Id string, name string, uri string, uriType string) (int, error) {
 	switch uriType {
-		case "git": {
+	case "git":
+		{
 			_, err := git.PlainClone(name, false, &git.CloneOptions{
 				URL: uri,
 			})
@@ -229,34 +228,36 @@ func GetPluginSources(Id string, name string, uri string, uriType string) (int, 
 				return 400, errors.New("could not clone repository: " + err.Error())
 			}
 		}
-		case "file": {
+	case "file":
+		{
 			resp, err := http.Get(uri)
 			if err != nil {
 				return 400, errors.New("could not download plugin: " + err.Error())
 			}
 			defer resp.Body.Close()
-	
+
 			if resp.StatusCode != 200 {
 				return 400, errors.New("could not download plugin: " + resp.Status)
 			}
-	
+
 			out, err := os.Create(name + "/" + Id)
 			if err != nil {
 				return 500, Errors.UnknownError
 			}
 			defer out.Close()
-	
+
 			_, err = io.Copy(out, resp.Body)
 			if err != nil {
 				return 500, Errors.UnknownError
 			}
-	
-			err = archiver.Unarchive(name + "/" + Id, name)
+
+			err = archiver.Unarchive(name+"/"+Id, name)
 			if err != nil {
 				return 400, errors.New("could not unarchive plugin: " + err.Error())
 			}
 		}
-		default: {
+	default:
+		{
 			return 400, errors.New("invalid uri_type: " + uriType)
 		}
 	}

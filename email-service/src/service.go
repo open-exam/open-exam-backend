@@ -26,14 +26,15 @@ func NewServer() (*Server, error) {
 }
 
 type String string
+
 func (s String) Format(data map[string]string) (out string, err error) {
-    t := template.Must(template.New("").Parse(string(s)))
-    builder := &strings.Builder{}
-    if err = t.Execute(builder, data); err != nil {
-        return "", err
-    }
-    out = builder.String()
-    return out, nil
+	t := template.Must(template.New("").Parse(string(s)))
+	builder := &strings.Builder{}
+	if err = t.Execute(builder, data); err != nil {
+		return "", err
+	}
+	out = builder.String()
+	return out, nil
 }
 
 func (s *Server) SendEmail(ctx context.Context, req *pb.EmailRequest) (*pb.SendEmailResponse, error) {
@@ -45,7 +46,7 @@ func (s *Server) SendEmail(ctx context.Context, req *pb.EmailRequest) (*pb.SendE
 	}
 
 	client := userPb.NewUserServiceClient(conn)
-	res, err := client.BatchGetEmails(context.Background(), &userPb.BatchGetEmailsRequest { Ids: req.Users })
+	res, err := client.BatchGetEmails(context.Background(), &userPb.BatchGetEmailsRequest{Ids: req.Users})
 	if err != nil {
 		return nil, err
 	}
@@ -61,14 +62,14 @@ func (s *Server) SendEmail(ctx context.Context, req *pb.EmailRequest) (*pb.SendE
 	count := 0
 	for i, e := range res.Emails {
 		if len(e) == 0 {
-			req.Users = remove(req.Users, i - count)
-			req.Vars = removeVar(req.Vars, i - count)
+			req.Users = remove(req.Users, i-count)
+			req.Vars = removeVar(req.Vars, i-count)
 			serviceResponse = append(serviceResponse, e)
 			count++
 		}
 	}
 
-	resp, err := http.Get(fsService + "/email-templates?id=" + strconv.FormatUint(req.TemplateId, 10));
+	resp, err := http.Get(fsService + "/email-templates?id=" + strconv.FormatUint(req.TemplateId, 10))
 	if err != nil {
 		return nil, err
 	}
@@ -112,30 +113,30 @@ func (s *Server) SendEmail(ctx context.Context, req *pb.EmailRequest) (*pb.SendE
 
 			body := sb
 			body, _ = String(body).Format(req.Vars[i].Values)
-	
+
 			subject := req.Subject
 			subject, _ = String(subject).Format(req.Vars[i].Values)
-	
+
 			email := mail.NewMSG()
 			email.SetFrom(res.Emails[i]).SetSubject(subject).SetBody(mail.TextHTML, body)
-	
+
 			if email.Error != nil {
 				continue
 			}
-	
+
 			email.Send(smtpClient)
 			count++
 
 			elapsed := time.Since(start).Milliseconds()
 			if count >= rateLimit && elapsed <= 1000 {
-				time.Sleep(time.Duration(1000 - elapsed) * time.Millisecond)
+				time.Sleep(time.Duration(1000-elapsed) * time.Millisecond)
 				count = 0
 				start = time.Now()
 			}
 		}
 	}()
 
-	return &pb.SendEmailResponse {
+	return &pb.SendEmailResponse{
 		Failed: serviceResponse,
 	}, nil
 }

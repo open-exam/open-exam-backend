@@ -15,21 +15,21 @@ import (
 )
 
 type Plugin struct {
-	Name string `json:"name" binding:"required"`
-	Uri string `json:"uri" binding:"required"`
-	UriType string `json:"uri_type" binding:"required"`
-	Version string `json:"version" binding:"required"`
+	Name         string `json:"name" binding:"required"`
+	Uri          string `json:"uri" binding:"required"`
+	UriType      string `json:"uri_type" binding:"required"`
+	Version      string `json:"version" binding:"required"`
 	Organization uint64 `json:"organization" binding:"required"`
 }
 
 type GetPlugins struct {
-	Name string `json:"name" binding:"required"`
-	Uri string `json:"uri" binding:"required"`
-	UriType string `json:"uri_type" binding:"required"`
-	Version string `json:"version" binding:"required"`
-	BuildStatus bool `json:"build_status" binding:"required"`
-	Page int32 `json:"page" binding:"required"`
-	NumPerPage int32 `json:"num_per_page" binding:"required"`
+	Name        string `json:"name" binding:"required"`
+	Uri         string `json:"uri" binding:"required"`
+	UriType     string `json:"uri_type" binding:"required"`
+	Version     string `json:"version" binding:"required"`
+	BuildStatus bool   `json:"build_status" binding:"required"`
+	Page        int32  `json:"page" binding:"required"`
+	NumPerPage  int32  `json:"num_per_page" binding:"required"`
 }
 
 func InitPlugins(router *gin.RouterGroup) {
@@ -55,14 +55,14 @@ func addPlugin(ctx *gin.Context) {
 
 	resp, err := shared.GetPluginSources(Id, name, plugin.Uri, plugin.UriType)
 	if err != nil {
-		ctx.AbortWithStatusJSON(resp, gin.H {
+		ctx.AbortWithStatusJSON(resp, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
 
 	if _, err := shared.ParsePlugin(name); err != nil {
-		ctx.AbortWithStatusJSON(400, gin.H {
+		ctx.AbortWithStatusJSON(400, gin.H{
 			"error": "could not validate plugin: " + err.Error(),
 		})
 		return
@@ -76,11 +76,11 @@ func addPlugin(ctx *gin.Context) {
 
 	client := pluginDbPb.NewPluginServiceClient(conn)
 
-	res, err := client.AddPlugin(context.Background(), &pluginDbPb.Plugin {
-		Name: plugin.Name,
-		Uri: plugin.Uri,
-		UriType: plugin.UriType,
-		Version: plugin.Version,
+	res, err := client.AddPlugin(context.Background(), &pluginDbPb.Plugin{
+		Name:         plugin.Name,
+		Uri:          plugin.Uri,
+		UriType:      plugin.UriType,
+		Version:      plugin.Version,
 		Organization: plugin.Organization,
 	})
 	if err != nil {
@@ -89,7 +89,7 @@ func addPlugin(ctx *gin.Context) {
 	}
 
 	containerClient := containerPb.NewContainerClient(conn)
-	resBuild, err := containerClient.Build(context.Background(), &sharedPb.StandardIdRequest {
+	resBuild, err := containerClient.Build(context.Background(), &sharedPb.StandardIdRequest{
 		IdInt: res.IdInt,
 	})
 	if err != nil {
@@ -98,13 +98,13 @@ func addPlugin(ctx *gin.Context) {
 	}
 
 	if !resBuild.Status {
-		ctx.AbortWithStatusJSON(400, gin.H {
+		ctx.AbortWithStatusJSON(400, gin.H{
 			"error": resBuild.Message,
 		})
 		return
 	}
 
-	ctx.JSON(200, gin.H {
+	ctx.JSON(200, gin.H{
 		"id": res.IdInt,
 	})
 
@@ -125,14 +125,14 @@ func getPlugins(ctx *gin.Context) {
 	}
 
 	client := pluginDbPb.NewPluginServiceClient(conn)
-	res, err := client.GetPlugins(context.Background(), &pluginDbPb.GetPluginsRequest {
-		Name: getPlugins.Name,
-		Uri: getPlugins.Uri,
-		UriType: getPlugins.UriType,
-		Version: getPlugins.Version,
+	res, err := client.GetPlugins(context.Background(), &pluginDbPb.GetPluginsRequest{
+		Name:        getPlugins.Name,
+		Uri:         getPlugins.Uri,
+		UriType:     getPlugins.UriType,
+		Version:     getPlugins.Version,
 		BuildStatus: getPlugins.BuildStatus,
-		Page: getPlugins.Page,
-		NumPerPage: getPlugins.NumPerPage,
+		Page:        getPlugins.Page,
+		NumPerPage:  getPlugins.NumPerPage,
 	})
 
 	if err != nil {

@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	operationDoesNotExist = &sharedPb.StandardStatusResponse {
+	operationDoesNotExist = &sharedPb.StandardStatusResponse{
 		Status: false,
 	}
 )
@@ -36,7 +36,7 @@ func (s *Server) DoesRoleExist(ctx context.Context, req *pb.RoleExistRequest) (*
 	var OperationId uint64
 	if err := rows.Scan(&OperationId); err != nil {
 		if err == sql.ErrNoRows {
-			return &pb.RoleExistResponse {
+			return &pb.RoleExistResponse{
 				Status: false,
 			}, nil
 		}
@@ -44,8 +44,8 @@ func (s *Server) DoesRoleExist(ctx context.Context, req *pb.RoleExistRequest) (*
 		return nil, err
 	}
 
-	return &pb.RoleExistResponse {
-		Status: true,
+	return &pb.RoleExistResponse{
+		Status:      true,
 		OperationId: OperationId,
 	}, nil
 }
@@ -67,7 +67,7 @@ func (s *Server) CanPerformOperation(ctx context.Context, req *pb.CanPerformOper
 
 		queryArr, dataArr := util.SqlArrayJoin(req.Operation)
 		dataArr = util.Prepend(dataArr, req.Resource)
-		rows, err := db.Query("SELECT id FROM operations WHERE resource=? AND operation IN (?" + queryArr + ")", dataArr...)
+		rows, err := db.Query("SELECT id FROM operations WHERE resource=? AND operation IN (?"+queryArr+")", dataArr...)
 		if err != nil {
 			return nil, err
 		}
@@ -94,7 +94,7 @@ func (s *Server) CanPerformOperation(ctx context.Context, req *pb.CanPerformOper
 		return handleError(sql.ErrNoRows)
 	}
 
-	return &sharedPb.StandardStatusResponse {
+	return &sharedPb.StandardStatusResponse{
 		Status: true,
 	}, nil
 }
@@ -113,7 +113,7 @@ func (s *Server) GiveRole(ctx context.Context, req *pb.GiveRoleRequest) (*shared
 		return nil, err
 	}
 
-	return &sharedPb.StandardStatusResponse {
+	return &sharedPb.StandardStatusResponse{
 		Status: true,
 	}, nil
 }
@@ -133,7 +133,7 @@ func (s *Server) RevokeRole(ctx context.Context, req *pb.GiveRoleRequest) (*shar
 		return nil, err
 	}
 
-	return &sharedPb.StandardStatusResponse {
+	return &sharedPb.StandardStatusResponse{
 		Status: true,
 	}, nil
 }
@@ -149,7 +149,7 @@ func (s *Server) checkAccessValidity(ctx context.Context, req *pb.GiveRoleReques
 	client := relationPb.NewRelationServiceClient(conn)
 	res, err := client.CanAccessScope(context.Background(), &relationPb.CanAccessScopeRequest{
 		UserId: req.UserId,
-		Scope: req.Scope,
+		Scope:  req.Scope,
 	})
 
 	if err != nil {
@@ -157,16 +157,16 @@ func (s *Server) checkAccessValidity(ctx context.Context, req *pb.GiveRoleReques
 	}
 
 	if !res.Status {
-		return &sharedPb.StandardStatusResponse {
+		return &sharedPb.StandardStatusResponse{
 			Status: false,
 		}, nil
 	}
 
 	canPerform, err := s.CanPerformOperation(ctx, &pb.CanPerformOperationRequest{
-		UserId: req.UserId,
-		Resource: "RBAC",
+		UserId:    req.UserId,
+		Resource:  "RBAC",
 		Operation: []string{"CREATE", "DELETE"},
-		Scope: req.Scope,
+		Scope:     req.Scope,
 	})
 
 	if err != nil {
@@ -174,8 +174,8 @@ func (s *Server) checkAccessValidity(ctx context.Context, req *pb.GiveRoleReques
 	}
 
 	if !canPerform.Status {
-		return &sharedPb.StandardStatusResponse	{
-			Status: false,
+		return &sharedPb.StandardStatusResponse{
+			Status:  false,
 			Message: "inadequate permissions",
 		}, nil
 	}

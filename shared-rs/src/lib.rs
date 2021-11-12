@@ -22,11 +22,11 @@ pub mod shared {
         }
         buf
     }
-    
+
     pub async fn write(stream: &Arc<Mutex<TcpStream>>, data: &[u8]) {
         let mut buf = Vec::new();
         {
-            use byteorder::{WriteBytesExt, BigEndian};
+            use byteorder::{BigEndian, WriteBytesExt};
             buf.write_u32::<BigEndian>(data.len() as u32);
             buf.extend_from_slice(&data);
         }

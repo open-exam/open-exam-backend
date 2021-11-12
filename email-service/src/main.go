@@ -11,16 +11,16 @@ import (
 )
 
 var (
-	mode string
-	db *sql.DB
-	userService string
+	mode            string
+	db              *sql.DB
+	userService     string
 	templateService string
-	fsService string
-	smtpHost string
-	emailUser string
-	emailPassword string
-	smtpPort int
-	rateLimit int
+	fsService       string
+	smtpHost        string
+	emailUser       string
+	emailPassword   string
+	smtpPort        int
+	rateLimit       int
 )
 
 func main() {

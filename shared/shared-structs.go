@@ -10,12 +10,12 @@ import (
 
 var (
 	poolingTypes = []string{"roundRobin", "random"}
-	gridTypes = []string{"plugin", "box"}
+	gridTypes    = []string{"plugin", "box"}
 )
 
 type UserJWT struct {
 	UserId string
-	Scope uint64
+	Scope  uint64
 }
 
 type Exam struct {
@@ -34,7 +34,7 @@ type Section struct {
 	Name string `json:"name"`
 	SectionSwitch
 	QuestionConfig QuestionConfig `json:"questionConfig"`
-	Layout Layout `json:"layout"`
+	Layout         Layout         `json:"layout"`
 }
 
 type QuestionConfig struct {
@@ -51,9 +51,9 @@ type StandardQuestions struct {
 }
 
 type PooledQuestions struct {
-	NumQuestions int `json:"numQuestions"`
-	Type string `json:"type"`
-	PoolId uint64 `json:"poolId"`
+	NumQuestions int    `json:"numQuestions"`
+	Type         string `json:"type"`
+	PoolId       uint64 `json:"poolId"`
 }
 
 type SetQuestions struct {
@@ -61,15 +61,15 @@ type SetQuestions struct {
 }
 
 type PooledSetQuestions struct {
-	NumQuestions int `json:"numQuestions"`
-	Type string `json:"type"`
-	PooledSets [][]int `json:"pooledSets"`
+	NumQuestions int     `json:"numQuestions"`
+	Type         string  `json:"type"`
+	PooledSets   [][]int `json:"pooledSets"`
 }
 
 type CustomQuestions struct {
-	PluginId uint64 `json:"pluginId"`
-	SystemState bool `json:"systemState"`
-	UserState bool `json:"userState"`
+	PluginId    uint64 `json:"pluginId"`
+	SystemState bool   `json:"systemState"`
+	UserState   bool   `json:"userState"`
 }
 
 type Layout struct {
@@ -77,9 +77,9 @@ type Layout struct {
 }
 
 type Grid struct {
-	Type string `json:"type"`
+	Type     string `json:"type"`
 	PluginId uint64 `json:"pluginId"`
-	Css string `json:"css"`
+	Css      string `json:"css"`
 }
 
 func (res *SectionIntermediate) UnmarshalJSON(data []byte) error {
@@ -92,26 +92,31 @@ func (res *SectionIntermediate) UnmarshalJSON(data []byte) error {
 
 func (res *QuestionConfig) UnmarshalJSON(data []byte) error {
 	switch res.SectionType {
-	case "standard": {
-		res.StandardQuestions = &StandardQuestions{}
-		return json.Unmarshal(data, res.StandardQuestions)
-	}
-	case "pooled": {
-		res.PooledQuestions = &PooledQuestions{}
-		return json.Unmarshal(data, res.PooledQuestions)
-	}
-	case "set": {
-		res.SetQuestions = &SetQuestions{}
-		return json.Unmarshal(data, res.SetQuestions)
-	}
-	case "pooledSet": {
-		res.PooledSetQuestions = &PooledSetQuestions{}
-		return json.Unmarshal(data, res.PooledSetQuestions)
-	}
-	case "custom": {
-		res.CustomQuestions = &CustomQuestions{}
-		return json.Unmarshal(data, res.CustomQuestions)
-	}
+	case "standard":
+		{
+			res.StandardQuestions = &StandardQuestions{}
+			return json.Unmarshal(data, res.StandardQuestions)
+		}
+	case "pooled":
+		{
+			res.PooledQuestions = &PooledQuestions{}
+			return json.Unmarshal(data, res.PooledQuestions)
+		}
+	case "set":
+		{
+			res.SetQuestions = &SetQuestions{}
+			return json.Unmarshal(data, res.SetQuestions)
+		}
+	case "pooledSet":
+		{
+			res.PooledSetQuestions = &PooledSetQuestions{}
+			return json.Unmarshal(data, res.PooledSetQuestions)
+		}
+	case "custom":
+		{
+			res.CustomQuestions = &CustomQuestions{}
+			return json.Unmarshal(data, res.CustomQuestions)
+		}
 	default:
 		return nil
 	}
@@ -128,56 +133,62 @@ func (res *Exam) Validate() error {
 		}
 
 		switch e.SectionType {
-		case "standard": {
-			if len(e.QuestionConfig.StandardQuestions.Questions) == 0 {
-				return fmt.Errorf("no questions specified in section `%s`", e.Name)
-			}
-		}
-		case "pooled": {
-			if e.QuestionConfig.PooledQuestions.NumQuestions == 0 {
-				return fmt.Errorf("number of questions cannot be zero in section `%s`", e.Name)
-			}
-
-			if util.IsInList(e.QuestionConfig.PooledQuestions.Type, &poolingTypes) == -1 {
-				return fmt.Errorf("pooling type not specified in section `%s`", e.Name)
-			}
-
-			if e.QuestionConfig.PooledQuestions.PoolId == 0 {
-				return fmt.Errorf("poolId not specified in section `%s`", e.Name)
-			}
-		}
-		case "pooledSet": {
-			if e.QuestionConfig.PooledSetQuestions.NumQuestions == 0 {
-				return fmt.Errorf("number of questions cannot be zero in section `%s`", e.Name)
-			}
-
-			if util.IsInList(e.QuestionConfig.PooledSetQuestions.Type, &poolingTypes) == -1 {
-				return fmt.Errorf("pooling type not specified in section `%s`", e.Name)
-			}
-
-			if len(e.QuestionConfig.PooledSetQuestions.PooledSets) == 0 {
-				return fmt.Errorf("pooled sets not specified in section `%s`", e.Name)
-			}
-
-			for i := range e.QuestionConfig.PooledSetQuestions.PooledSets {
-				if len(e.QuestionConfig.PooledSetQuestions.PooledSets[i]) != 2 {
-					return fmt.Errorf("pooled set config at [%d] in section `%s` not found", i, e.Name)
+		case "standard":
+			{
+				if len(e.QuestionConfig.StandardQuestions.Questions) == 0 {
+					return fmt.Errorf("no questions specified in section `%s`", e.Name)
 				}
 			}
-		}
-		case "set": {
-			if len(e.QuestionConfig.SetQuestions.Sets) == 0 {
-				return fmt.Errorf("sets not specified in section `%s`", e.Name)
+		case "pooled":
+			{
+				if e.QuestionConfig.PooledQuestions.NumQuestions == 0 {
+					return fmt.Errorf("number of questions cannot be zero in section `%s`", e.Name)
+				}
+
+				if util.IsInList(e.QuestionConfig.PooledQuestions.Type, &poolingTypes) == -1 {
+					return fmt.Errorf("pooling type not specified in section `%s`", e.Name)
+				}
+
+				if e.QuestionConfig.PooledQuestions.PoolId == 0 {
+					return fmt.Errorf("poolId not specified in section `%s`", e.Name)
+				}
 			}
-		}
-		case "custom": {
-			if e.QuestionConfig.CustomQuestions.PluginId == 0 {
-				return fmt.Errorf("pluginId not specified in section `%s`", e.Name)
+		case "pooledSet":
+			{
+				if e.QuestionConfig.PooledSetQuestions.NumQuestions == 0 {
+					return fmt.Errorf("number of questions cannot be zero in section `%s`", e.Name)
+				}
+
+				if util.IsInList(e.QuestionConfig.PooledSetQuestions.Type, &poolingTypes) == -1 {
+					return fmt.Errorf("pooling type not specified in section `%s`", e.Name)
+				}
+
+				if len(e.QuestionConfig.PooledSetQuestions.PooledSets) == 0 {
+					return fmt.Errorf("pooled sets not specified in section `%s`", e.Name)
+				}
+
+				for i := range e.QuestionConfig.PooledSetQuestions.PooledSets {
+					if len(e.QuestionConfig.PooledSetQuestions.PooledSets[i]) != 2 {
+						return fmt.Errorf("pooled set config at [%d] in section `%s` not found", i, e.Name)
+					}
+				}
 			}
-		}
-		default: {
-			return fmt.Errorf("unknown section type in section `%s`", e.Name)
-		}
+		case "set":
+			{
+				if len(e.QuestionConfig.SetQuestions.Sets) == 0 {
+					return fmt.Errorf("sets not specified in section `%s`", e.Name)
+				}
+			}
+		case "custom":
+			{
+				if e.QuestionConfig.CustomQuestions.PluginId == 0 {
+					return fmt.Errorf("pluginId not specified in section `%s`", e.Name)
+				}
+			}
+		default:
+			{
+				return fmt.Errorf("unknown section type in section `%s`", e.Name)
+			}
 		}
 
 		if len(e.Layout.Grid) == 0 {
@@ -191,11 +202,12 @@ func (res *Exam) Validate() error {
 				}
 
 				switch innerE.Type {
-				case "plugin": {
-					if innerE.PluginId == 0 {
-						return fmt.Errorf("pluginId not specified in grid at [%d][%d] in section `%s`", outer, inner, e.Name)
+				case "plugin":
+					{
+						if innerE.PluginId == 0 {
+							return fmt.Errorf("pluginId not specified in grid at [%d][%d] in section `%s`", outer, inner, e.Name)
+						}
 					}
-				}
 				}
 			}
 		}

@@ -63,7 +63,7 @@ func (s *Server) CreateUser(stream pb.UserService_CreateUserServer) error {
 		}
 
 		if len(req.Email) == 0 {
-			handleStreamSend(&pb.User {
+			handleStreamSend(&pb.User{
 				Error: "email is required",
 			})
 			continue
@@ -72,7 +72,7 @@ func (s *Server) CreateUser(stream pb.UserService_CreateUserServer) error {
 		password := generatePassword(standardPasswordSize)
 		passHash, err := generateFromPassword(password)
 		if err != nil {
-			handleStreamSend(&pb.User {
+			handleStreamSend(&pb.User{
 				Error: "unknown error while generating password",
 			})
 			continue
@@ -87,25 +87,25 @@ func (s *Server) CreateUser(stream pb.UserService_CreateUserServer) error {
 
 				err = rows.Scan(&Id)
 				if err != nil {
-					handleStreamSend(&pb.User {
+					handleStreamSend(&pb.User{
 						Error: "an unknown error occurred",
 					})
 					continue
 				}
 
-				handleStreamSend(&pb.User {
+				handleStreamSend(&pb.User{
 					Id: Id,
 				})
 				continue
 			}
 
-			handleStreamSend(&pb.User {
+			handleStreamSend(&pb.User{
 				Error: "an unknown error occurred",
 			})
 			continue
 		}
 
-		handleStreamSend(&pb.User {
+		handleStreamSend(&pb.User{
 			Id: Id,
 		})
 	}
@@ -126,16 +126,16 @@ func (s *Server) AddUserToScope(stream pb.UserService_AddUserToScopeServer) erro
 		}
 
 		if len(req.Id) == 0 {
-			handleStreamSend(&sharedPb.StandardStatusResponse {
-				Status: false,
+			handleStreamSend(&sharedPb.StandardStatusResponse{
+				Status:  false,
 				Message: "id is required",
 			})
 			continue
 		}
 
 		if req.Scope == 0 || req.ScopeType == 0 {
-			handleStreamSend(&sharedPb.StandardStatusResponse {
-				Status: false,
+			handleStreamSend(&sharedPb.StandardStatusResponse{
+				Status:  false,
 				Message: "scope and scopeType are required",
 			})
 			continue
@@ -147,23 +147,23 @@ func (s *Server) AddUserToScope(stream pb.UserService_AddUserToScopeServer) erro
 		err = row.Scan(&userType)
 		if err != nil {
 			if err == sql.ErrNoRows {
-				handleStreamSend(&sharedPb.StandardStatusResponse {
-					Status: false,
+				handleStreamSend(&sharedPb.StandardStatusResponse{
+					Status:  false,
 					Message: "user does not exist",
 				})
 				continue
 			}
 
 			handleStreamSend(&sharedPb.StandardStatusResponse{
-				Status: false,
+				Status:  false,
 				Message: err.Error(),
 			})
 			continue
 		}
 
 		if userType == 1 && req.ScopeType != 4 {
-			handleStreamSend(&sharedPb.StandardStatusResponse {
-				Status: false,
+			handleStreamSend(&sharedPb.StandardStatusResponse{
+				Status:  false,
 				Message: "student can only be assigned to teams",
 			})
 			continue
@@ -176,14 +176,14 @@ func (s *Server) AddUserToScope(stream pb.UserService_AddUserToScopeServer) erro
 		}
 
 		if err != nil {
-			handleStreamSend(&sharedPb.StandardStatusResponse {
-				Status: false,
+			handleStreamSend(&sharedPb.StandardStatusResponse{
+				Status:  false,
 				Message: "an unknown error occurred",
 			})
 			continue
 		}
 
-		handleStreamSend(&sharedPb.StandardStatusResponse {
+		handleStreamSend(&sharedPb.StandardStatusResponse{
 			Status: true,
 		})
 	}
@@ -194,7 +194,7 @@ func (s *Server) GetUser(ctx context.Context, req *sharedPb.StandardIdRequest) (
 		return nil, errors.New("id is required")
 	}
 
-	student := &pb.DetailedUser {}
+	student := &pb.DetailedUser{}
 	userRow := db.QueryRow("SELECT id, name, email FROM users WHERE id=? AND type=1", req.IdString)
 
 	err := userRow.Scan(&student.Id, &student.Name, &student.Email)
