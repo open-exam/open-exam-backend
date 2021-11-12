@@ -9,8 +9,7 @@ import (
 	"strings"
 )
 
-var files = []string {}
-
+var files = []string{}
 
 func main() {
 	mode := flag.Bool("all", false, "Use all files")
@@ -23,7 +22,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		files = func () []string {
+		files = func() []string {
 			items := strings.Split(string(data), "\n")
 			res := make([]string, 0)
 
@@ -45,7 +44,7 @@ func main() {
 	}
 
 	generate := func(path string, extraArgs ...string) {
-		args := []string {"--go_out=.", "--go_opt=paths=source_relative", "--go-grpc_out=."}
+		args := []string{"--go_out=.", "--go_opt=paths=source_relative", "--go-grpc_out=."}
 		if len(extraArgs) > 0 {
 			args = append(args, extraArgs...)
 		}
@@ -59,9 +58,8 @@ func main() {
 	}
 
 	for _, file := range files {
-		generate(file + "/grpc-" + file + "/" + file + ".proto", "-I=grpc-shared", "--proto_path=.")
+		generate(file+"/grpc-"+file+"/"+file+".proto", "-I=grpc-shared", "--proto_path=.")
 	}
-
 
 	generate("grpc-shared/shared.proto")
 }

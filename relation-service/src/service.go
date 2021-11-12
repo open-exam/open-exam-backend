@@ -61,10 +61,10 @@ func (s *Server) CanAccessExam(ctx context.Context, req *pb.CanAccessExamRequest
 	}
 
 	fillScope := func() (*sharedPb.StandardStatusResponse, error) {
-		falseRes := &sharedPb.StandardStatusResponse {
+		falseRes := &sharedPb.StandardStatusResponse{
 			Status: false,
 		}
-		res := &sharedPb.StandardStatusResponse {
+		res := &sharedPb.StandardStatusResponse{
 			Status: scope == teamId,
 		}
 
@@ -80,33 +80,35 @@ func (s *Server) CanAccessExam(ctx context.Context, req *pb.CanAccessExamRequest
 
 			return falseRes, nil
 		}
-		
+
 		return res, nil
 	}
 
 	switch scopeType {
-	case 3: {
-		rows = db.QueryRow("SELECT tm.id FROM teams tm WHERE tm.id=? AND tm.group_id IN(SELECT gr.id FROM `groups` gr WHERE gr.org_id=?)", teamId, scope)
-	}
-	case 4: {
-		rows = db.QueryRow("SELECT id FROM teams WHERE group_id=?", scope)
-	}
+	case 3:
+		{
+			rows = db.QueryRow("SELECT tm.id FROM teams tm WHERE tm.id=? AND tm.group_id IN(SELECT gr.id FROM `groups` gr WHERE gr.org_id=?)", teamId, scope)
+		}
+	case 4:
+		{
+			rows = db.QueryRow("SELECT id FROM teams WHERE group_id=?", scope)
+		}
 	}
 	return fillScope()
 }
 
 func (s *Server) CanAccessScope(ctx context.Context, req *pb.CanAccessScopeRequest) (*sharedPb.StandardStatusResponse, error) {
-	
+
 	if len(req.UserId) == 0 || req.Scope == 0 {
 		return nil, errors.New("invalid request")
 	}
 
 	var (
-		scope     uint64
-		scopeType uint
-		trueStatus = &sharedPb.StandardStatusResponse {
+		scope      uint64
+		scopeType  uint
+		trueStatus = &sharedPb.StandardStatusResponse{
 			Status: true,
-		};
+		}
 		innerRows *sql.Row
 	)
 
@@ -121,7 +123,7 @@ func (s *Server) CanAccessScope(ctx context.Context, req *pb.CanAccessScopeReque
 	}
 
 	rows, err := db.Query("SELECT scope, scope_type FROM standard_users WHERE user_id=? ORDER BY scope_type ASC", req.UserId)
-	
+
 	if err != nil {
 		return nil, err
 	}
@@ -136,29 +138,32 @@ func (s *Server) CanAccessScope(ctx context.Context, req *pb.CanAccessScopeReque
 		}
 
 		switch scopeType {
-		case 2: {
-			if scope != req.Scope {
-				continue
+		case 2:
+			{
+				if scope != req.Scope {
+					continue
+				}
 			}
-		}
-		case 3: {
-			innerRows = db.QueryRow("SELECT id FROM `groups` WHERE org_id=? AND id=?", scope, req.Scope)
-		}
-		case 4: {
-			innerRows = db.QueryRow("SELECT id FROM teams WHERE group_id=? AND id=?", scope, req.Scope)
-		}
+		case 3:
+			{
+				innerRows = db.QueryRow("SELECT id FROM `groups` WHERE org_id=? AND id=?", scope, req.Scope)
+			}
+		case 4:
+			{
+				innerRows = db.QueryRow("SELECT id FROM teams WHERE group_id=? AND id=?", scope, req.Scope)
+			}
 		}
 
 		var temp uint64
 		innerRowErr := innerRows.Scan(&temp)
-		if innerRowErr != nil && innerRowErr!= sql.ErrNoRows {
+		if innerRowErr != nil && innerRowErr != sql.ErrNoRows {
 			return nil, innerRowErr
 		} else if innerRowErr == nil {
 			return trueStatus, nil
 		}
 	}
 
-	return &sharedPb.StandardStatusResponse {
+	return &sharedPb.StandardStatusResponse{
 		Status: false,
 	}, nil
 }
@@ -177,9 +182,9 @@ func (s *Server) CanAccessTemplate(ctx context.Context, req *pb.CanAccessTemplat
 	for rows.Next() {
 		var scope uint64
 		rows.Scan(&scope)
-		res, err := s.CanAccessScope(ctx, &pb.CanAccessScopeRequest {
+		res, err := s.CanAccessScope(ctx, &pb.CanAccessScopeRequest{
 			UserId: req.UserId,
-			Scope: scope,
+			Scope:  scope,
 		})
 		if err != nil {
 			return nil, err
@@ -192,13 +197,13 @@ func (s *Server) CanAccessTemplate(ctx context.Context, req *pb.CanAccessTemplat
 	}
 
 	if !validScope {
-		return &sharedPb.StandardStatusResponse {
-			Status: false,
+		return &sharedPb.StandardStatusResponse{
+			Status:  false,
 			Message: "user does not have access to this template",
 		}, nil
 	}
 
-	return &sharedPb.StandardStatusResponse {
+	return &sharedPb.StandardStatusResponse{
 		Status: true,
 	}, nil
-}	
+}

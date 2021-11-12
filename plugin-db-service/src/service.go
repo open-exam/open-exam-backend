@@ -14,10 +14,10 @@ type Server struct {
 }
 
 func NewServer() (*Server, error) {
-	return &Server {}, nil
+	return &Server{}, nil
 }
 
-func (s* Server) AddPlugin(ctx context.Context, req *pb.Plugin) (*sharedPb.StandardIdResponse, error) {
+func (s *Server) AddPlugin(ctx context.Context, req *pb.Plugin) (*sharedPb.StandardIdResponse, error) {
 	_, err := db.Exec("INSERT INTO plugins VALUES(?, ?, ?, ?, ?, ?)", req.Name, req.Uri, req.UriType, req.Version, req.Organization, false)
 
 	if err != nil {
@@ -29,7 +29,7 @@ func (s* Server) AddPlugin(ctx context.Context, req *pb.Plugin) (*sharedPb.Stand
 	if res.Err() != nil {
 		return nil, err
 	}
-	
+
 	err = res.Scan(&Id)
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func (s* Server) AddPlugin(ctx context.Context, req *pb.Plugin) (*sharedPb.Stand
 	}, nil
 }
 
-func (s* Server) UpdateStatus(ctx context.Context, req *pb.UpdateStatus) (*sharedPb.StandardStatusResponse, error) {
+func (s *Server) UpdateStatus(ctx context.Context, req *pb.UpdateStatus) (*sharedPb.StandardStatusResponse, error) {
 	_, err := db.Exec("UPDATE plugins SET build_status = ? WHERE id = ?", req.Status, req.Id)
 	if err != nil {
 		return &sharedPb.StandardStatusResponse{
@@ -60,12 +60,12 @@ func (s *Server) GetPlugins(ctx context.Context, req *pb.GetPluginsRequest) (*pb
 
 	if len(req.Name) > 0 {
 		args = append(args, "name LIKE ?")
-		items = append(items, "%" + req.Name + "%")
+		items = append(items, "%"+req.Name+"%")
 	}
 
 	if len(req.Uri) > 0 {
 		args = append(args, "uri LIKE ?")
-		items = append(items, "%" + req.Uri + "%")
+		items = append(items, "%"+req.Uri+"%")
 	}
 
 	if len(req.UriType) > 0 {
@@ -75,7 +75,7 @@ func (s *Server) GetPlugins(ctx context.Context, req *pb.GetPluginsRequest) (*pb
 
 	if len(req.Version) > 0 {
 		args = append(args, "version LIKE ?")
-		items = append(items, "%" + req.Version + "%")
+		items = append(items, "%"+req.Version+"%")
 	}
 
 	secondPart := strings.Join(args, " AND ")
@@ -88,13 +88,13 @@ func (s *Server) GetPlugins(ctx context.Context, req *pb.GetPluginsRequest) (*pb
 		req.NumPerPage = 25
 	}
 
-	rows, err := db.Query(q + secondPart + " LIMIT " + strconv.FormatInt(int64(req.NumPerPage), 10) + " OFFSET " + strconv.FormatInt(int64(req.NumPerPage * req.Page), 10), items...)
+	rows, err := db.Query(q+secondPart+" LIMIT "+strconv.FormatInt(int64(req.NumPerPage), 10)+" OFFSET "+strconv.FormatInt(int64(req.NumPerPage*req.Page), 10), items...)
 	if err != nil {
 		return nil, err
 	}
 
 	var plugins []*pb.Plugin
-	
+
 	for rows.Next() {
 		current := &pb.Plugin{}
 
@@ -117,8 +117,8 @@ func (s *Server) GetPlugins(ctx context.Context, req *pb.GetPluginsRequest) (*pb
 		return nil, err
 	}
 
-	return &pb.PluginInfo {
+	return &pb.PluginInfo{
 		TotalItems: total,
-		Plugins: plugins,
+		Plugins:    plugins,
 	}, nil
 }

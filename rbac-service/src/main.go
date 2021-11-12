@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	db *sql.DB
-	mode = "prod"
+	db              *sql.DB
+	mode            = "prod"
 	relationService string
 )
 
@@ -26,7 +26,6 @@ func main() {
 		pb.RegisterRbacServiceServer(server, s)
 	})
 }
-
 
 func validateOptions() {
 	relationService = os.Getenv("relation_service")

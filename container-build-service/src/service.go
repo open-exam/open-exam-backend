@@ -32,14 +32,14 @@ func (s *Server) Build(ctx context.Context, req *sharedPb.StandardIdRequest) (*s
 	}
 
 	var (
-		uri string
+		uri     string
 		uriType string
 	)
 
 	if err := rows.Scan(&uri, &uriType); err != nil {
 		if err == sql.ErrNoRows {
 			return &sharedPb.StandardStatusResponse{
-				Status: false,
+				Status:  false,
 				Message: "Plugin not found",
 			}, nil
 		}
@@ -76,40 +76,40 @@ func (s *Server) Build(ctx context.Context, req *sharedPb.StandardIdRequest) (*s
 				goto setStatus
 			}
 
-			cmd = exec.Command("podman", "tag", "localhost/" + IdString + ":latest", registryHost + ":" + registryPort + "/" + "plugins/" + IdString + ":latest")
+			cmd = exec.Command("podman", "tag", "localhost/"+IdString+":latest", registryHost+":"+registryPort+"/"+"plugins/"+IdString+":latest")
 			cmdErr = cmd.Wait()
 			if cmdErr != nil {
 				log.Println(err)
 				goto setStatus
 			}
 
-			cmd = exec.Command("podman", "push", registryHost + ":" + registryPort + "/" + "plugins/" + IdString + ":latest")
+			cmd = exec.Command("podman", "push", registryHost+":"+registryPort+"/"+"plugins/"+IdString+":latest")
 			cmdErr = cmd.Wait()
 			if cmdErr != nil {
 				log.Println(err)
 			}
 
-			setStatus:
-				conn, err := shared.GetGrpcConn(pluginDbService)
-				if err != nil {
-					log.Println(err)
-					return
-				}
+		setStatus:
+			conn, err := shared.GetGrpcConn(pluginDbService)
+			if err != nil {
+				log.Println(err)
+				return
+			}
 
-				client := pluginDbPb.NewPluginServiceClient(conn)
+			client := pluginDbPb.NewPluginServiceClient(conn)
 
-				_, err = client.UpdateStatus(context.Background(), &pluginDbPb.UpdateStatus {
-					Id: req.IdInt,
-					Status: cmdErr == nil,
-				})
+			_, err = client.UpdateStatus(context.Background(), &pluginDbPb.UpdateStatus{
+				Id:     req.IdInt,
+				Status: cmdErr == nil,
+			})
 
-				if err != nil {
-					log.Println(err)
-				}
-		} ()
+			if err != nil {
+				log.Println(err)
+			}
+		}()
 	}
 
-	return &sharedPb.StandardStatusResponse {
+	return &sharedPb.StandardStatusResponse{
 		Status: true,
 	}, nil
 }

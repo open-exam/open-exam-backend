@@ -45,6 +45,7 @@ type params struct {
 	saltLength  uint32
 	keyLength   uint32
 }
+
 func comparePasswordAndHash(password, encodedHash string) (match bool, err error) {
 	// Extract the parameters, salt and derived key from the encoded password
 	// hash.

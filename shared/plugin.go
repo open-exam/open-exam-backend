@@ -6,7 +6,7 @@ type Plugin struct {
 
 type ServerSide struct {
 	Dockerfile string `json:"dockerfile"`
-	Context string `json:"context"`
+	Context    string `json:"context"`
 }
 
 func ParsePlugin(name string) (Plugin, error) {

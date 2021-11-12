@@ -11,8 +11,6 @@ import (
 	"github.com/open-exam/open-exam-backend/util"
 )
 
-
-
 func InitExamTemplates(router *gin.RouterGroup) {
 	router.Use(shared.JwtMiddleware(jwtPublicKey, mode))
 
@@ -22,7 +20,7 @@ func InitExamTemplates(router *gin.RouterGroup) {
 func createExamTemplate(ctx *gin.Context) {
 	form, err := ctx.MultipartForm()
 	if err != nil {
-		ctx.AbortWithStatusJSON(400, gin.H {
+		ctx.AbortWithStatusJSON(400, gin.H{
 			"error": err.Error(),
 		})
 		return
@@ -51,7 +49,7 @@ func createExamTemplate(ctx *gin.Context) {
 		})
 		return
 	}
-	
+
 	scopes := form.Value["scopes"]
 	if len(scopes) == 0 {
 		ctx.AbortWithStatusJSON(400, gin.H{
@@ -68,19 +66,19 @@ func createExamTemplate(ctx *gin.Context) {
 		})
 		return
 	}
-	
+
 	files := form.File["template"]
 	if len(files) == 0 {
-		ctx.AbortWithStatusJSON(400, gin.H {
+		ctx.AbortWithStatusJSON(400, gin.H{
 			"error": "No template file provided",
 		})
 		return
 	}
-	
+
 	buf := make([]byte, files[0].Size)
 	file, err := files[0].Open()
 	if err != nil {
-		ctx.AbortWithStatusJSON(400, gin.H {
+		ctx.AbortWithStatusJSON(400, gin.H{
 			"error": shared.GinErrors.UnknownError,
 		})
 		return
@@ -88,7 +86,7 @@ func createExamTemplate(ctx *gin.Context) {
 
 	n, err := file.Read(buf)
 	if err != nil || n == 0 {
-		ctx.AbortWithStatusJSON(400, gin.H {
+		ctx.AbortWithStatusJSON(400, gin.H{
 			"error": shared.GinErrors.UnknownError,
 		})
 		return
@@ -102,15 +100,15 @@ func createExamTemplate(ctx *gin.Context) {
 	}
 
 	if err := examConfig.Validate(); err != nil {
-		ctx.AbortWithStatusJSON(400, gin.H {
+		ctx.AbortWithStatusJSON(400, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
 
-	ct, body, err := util.CreateMultipartForm(map[string]string {
+	ct, body, err := util.CreateMultipartForm(map[string]string{
 		"template": string(buf),
-		"org_id": form.Value["org_id"][0],
+		"org_id":   form.Value["org_id"][0],
 	})
 	conn, err := shared.GetGrpcConn(examService)
 	if err != nil {
@@ -119,18 +117,18 @@ func createExamTemplate(ctx *gin.Context) {
 	}
 
 	examClient := examPb.NewExamTemplateClient(conn)
-	
+
 	examScopes := make([]*examPb.Scope, 0)
 
 	for _, sc := range parsedScopes {
-		examScopes = append(examScopes, &examPb.Scope {
-			Scope: sc.Scope,
+		examScopes = append(examScopes, &examPb.Scope{
+			Scope:     sc.Scope,
 			ScopeType: sc.ScopeType,
 		})
 	}
 
 	res, err := examClient.CreateTemplate(ctx, &examPb.CreateExamTemplateRequest{
-		Name: names[0],
+		Name:   names[0],
 		Scopes: examScopes,
 	})
 	if err != nil {
@@ -138,13 +136,13 @@ func createExamTemplate(ctx *gin.Context) {
 		return
 	}
 
-	resp, err := http.Post(fsService + "/exam-template", ct, body)
+	resp, err := http.Post(fsService+"/exam-template", ct, body)
 	if err != nil || resp.StatusCode >= 400 {
 		ctx.AbortWithStatusJSON(400, shared.GinErrors.UnknownError)
 		return
 	}
 
-	ctx.JSON(200, gin.H {
+	ctx.JSON(200, gin.H{
 		"id": res.IdString,
 	})
 }

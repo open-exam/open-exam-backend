@@ -375,7 +375,7 @@ func generateUsers(ctx *gin.Context) {
 func getUser(ctx *gin.Context) {
 	userId := ctx.Param("userId")
 	if len(userId) == 0 {
-		ctx.AbortWithStatusJSON(400, gin.H {
+		ctx.AbortWithStatusJSON(400, gin.H{
 			"error": "user id not specified",
 		})
 		return
@@ -385,7 +385,7 @@ func getUser(ctx *gin.Context) {
 
 	userClient := userPb.NewUserServiceClient(conn)
 
-	res, err := userClient.GetUser(context.Background(), &sharedPb.StandardIdRequest {
+	res, err := userClient.GetUser(context.Background(), &sharedPb.StandardIdRequest{
 		IdString: userId,
 	})
 	if err != nil {
