@@ -231,8 +231,8 @@ func logout(ctx *gin.Context) {
 		})
 
 		if err != nil {
-			ctx.JSON(500, gin.H {
-				"error": "invalid_request",
+			ctx.JSON(500, gin.H{
+				"error":             "invalid_request",
 				"error_description": "malformed code",
 			})
 			return
@@ -260,8 +260,8 @@ func logout(ctx *gin.Context) {
 			}
 		}
 	} else {
-		ctx.JSON(400, gin.H {
-			"error": "invalid_request",
+		ctx.JSON(400, gin.H{
+			"error":             "invalid_request",
 			"error_description": "invalid code",
 		})
 		return
