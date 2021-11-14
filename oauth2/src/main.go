@@ -233,31 +233,27 @@ func logout(ctx *gin.Context) {
 		if err != nil {
 			ctx.JSON(500, gin.H{
 				"error":             "invalid_request",
-				"error_description": "malformed code",
+				"error_description": "malformed jwt",
 			})
 			return
 		}
 
-		if _, ok := tok.Claims.(jwt.Claims); !ok && !tok.Valid {
-			ctx.JSON(400, errBadJWT)
-			return
-		}
 		claims, ok := tok.Claims.(jwt.MapClaims)
 		if ok && tok.Valid {
 			if claims.Valid() != nil {
 				ctx.JSON(400, errBadJWT)
 				return
 			}
-
-			if claims["sub"] != "logout" {
+			
+			_, err := redisCluster.Del(ctx, claims["user"].(string)).Result()
+			if err != nil {
 				ctx.JSON(400, errBadJWT)
 				return
 			}
-			val, err := redisCluster.Del(ctx, claims["user"].(string)).Result()
-			//val, err := redisCluster.LRange(ctx, claims["user"].(string), 0, -1).Result()
-			if err != nil {
-				ctx.JSON(400, errBadJWT)
-			}
+			
+			ctx.Status(200)
+		} else {
+			ctx.JSON(400, errBadJWT)
 		}
 	} else {
 		ctx.JSON(400, gin.H{
