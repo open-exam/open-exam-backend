@@ -217,6 +217,57 @@ func authorize(ctx *gin.Context) {
 	}
 }
 
+func logout(ctx *gin.Context) {
+	var (
+		code = ctx.Query("code")
+	)
+
+	if len(code) > 0 && len(code) < 1024 {
+		tok, err := jwt.Parse(code, func(jwtToken *jwt.Token) (interface{}, error) {
+			if _, ok := jwtToken.Method.(*jwt.SigningMethodRSA); !ok {
+				return nil, fmt.Errorf("unexpected method: %s", jwtToken.Header["alg"])
+			}
+			return jwtPublicKey, nil
+		})
+
+		if err != nil {
+			ctx.JSON(500, gin.H {
+				"error": "invalid_request",
+				"error_description": "malformed code",
+			})
+			return
+		}
+
+		if _, ok := tok.Claims.(jwt.Claims); !ok && !tok.Valid {
+			ctx.JSON(400, errBadJWT)
+			return
+		}
+		claims, ok := tok.Claims.(jwt.MapClaims)
+		if ok && tok.Valid {
+			if claims.Valid() != nil {
+				ctx.JSON(400, errBadJWT)
+				return
+			}
+
+			if claims["sub"] != "logout" {
+				ctx.JSON(400, errBadJWT)
+				return
+			}
+			val, err := redisCluster.Del(ctx, claims["user"].(string)).Result()
+			//val, err := redisCluster.LRange(ctx, claims["user"].(string), 0, -1).Result()
+			if err != nil {
+				ctx.JSON(400, errBadJWT)
+			}
+		}
+	} else {
+		ctx.JSON(400, gin.H {
+			"error": "invalid_request",
+			"error_description": "invalid code",
+		})
+		return
+	}
+}
+
 func getToken(ctx *gin.Context) {
 	var (
 		code         = ctx.Query("code")
