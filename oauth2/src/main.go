@@ -244,13 +244,13 @@ func logout(ctx *gin.Context) {
 				ctx.JSON(400, errBadJWT)
 				return
 			}
-			
+
 			_, err := redisCluster.Del(ctx, claims["user"].(string)).Result()
 			if err != nil {
 				ctx.JSON(400, errBadJWT)
 				return
 			}
-			
+
 			ctx.Status(200)
 		} else {
 			ctx.JSON(400, errBadJWT)
