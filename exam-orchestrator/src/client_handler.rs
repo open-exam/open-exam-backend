@@ -25,7 +25,7 @@ impl Client {
             stream,
             key,
             exam_service: None,
-            client_integrity_service: None
+            client_integrity_service: None,
         }
     }
 }
@@ -33,8 +33,20 @@ impl Client {
 #[async_trait::async_trait]
 impl Actor for Client {
     async fn started(&mut self, ctx: &mut Context<Self>) -> Result<()> {
-        self.exam_service = Some(std::env::var("exam_service").ok().unwrap().parse::<SocketAddr>().unwrap());
-        self.client_integrity_service = Some(std::env::var("client_integrity_service").ok().unwrap().parse::<SocketAddr>().unwrap());
+        self.exam_service = Some(
+            std::env::var("exam_service")
+                .ok()
+                .unwrap()
+                .parse::<SocketAddr>()
+                .unwrap(),
+        );
+        self.client_integrity_service = Some(
+            std::env::var("client_integrity_service")
+                .ok()
+                .unwrap()
+                .parse::<SocketAddr>()
+                .unwrap(),
+        );
         Ok(())
     }
 }
@@ -82,8 +94,8 @@ impl Handler<InitClient> for Client {
 
         let mut buf = Vec::new();
         {
-            use std::io::Write;
             use byteorder::{BigEndian, WriteBytesExt};
+            use std::io::Write;
             buf.write_u32::<BigEndian>(200);
             buf.write(req.0.as_bytes());
         }
@@ -121,7 +133,12 @@ impl Handler<Request> for Client {
 
         let raw_data = decrypt(buf, &self.key.unwrap()[..]);
         if raw_data.len() < 20 {
-            ctx.address().call(Notification(0, r#"{"error": "could not parse request"#.to_string())).await;
+            ctx.address()
+                .call(Notification(
+                    0,
+                    r#"{"error": "could not parse request"#.to_string(),
+                ))
+                .await;
             return;
         }
 
@@ -131,19 +148,36 @@ impl Handler<Request> for Client {
         let client = hyper::Client::new();
         let service_req = hyper::Request::builder()
             .method("POST")
-            .uri(format!("http://{}/{}", self.exam_service.unwrap(), request_name))
+            .uri(format!(
+                "http://{}/{}",
+                self.exam_service.unwrap(),
+                request_name
+            ))
             .body(hyper::Body::from(raw_data[4..].to_vec()))
             .unwrap();
 
         let resp = client.request(service_req).await;
 
         if resp.is_err() {
-            ctx.address().call(Notification(counter, r#","error":"#.to_string() + "Could not connect to internal service")).await;
+            ctx.address()
+                .call(Notification(
+                    counter,
+                    r#","error":"#.to_string() + "Could not connect to internal service",
+                ))
+                .await;
             return;
         }
 
         let res = resp.unwrap();
-        ctx.address().call(Notification(counter, String::from_utf8(hyper::body::to_bytes(res.into_body()).await.unwrap()[..].to_vec()).unwrap())).await;
+        ctx.address()
+            .call(Notification(
+                counter,
+                String::from_utf8(
+                    hyper::body::to_bytes(res.into_body()).await.unwrap()[..].to_vec(),
+                )
+                .unwrap(),
+            ))
+            .await;
     }
 }
 
@@ -161,7 +195,12 @@ impl Handler<Notification> for Client {
 
         shared_rs::shared::write(
             &self.stream,
-            &encrypt(buf.into_iter().chain(req.1.as_bytes().to_vec()).collect::<Vec<u8>>(), &self.key.unwrap()[..]),
+            &encrypt(
+                buf.into_iter()
+                    .chain(req.1.as_bytes().to_vec())
+                    .collect::<Vec<u8>>(),
+                &self.key.unwrap()[..],
+            ),
         )
         .await;
     }
@@ -186,5 +225,7 @@ fn encrypt(mut buf: Vec<u8>, key: &[u8]) -> Vec<u8> {
     let cipher = Aes128Cbc::new_from_slices(&key, &iv.to_vec()).unwrap();
     let pos = buf.len();
 
-    iv.into_iter().chain(cipher.encrypt(&mut buf, pos).unwrap().to_vec().into_iter()).collect::<Vec<u8>>()
+    iv.into_iter()
+        .chain(cipher.encrypt(&mut buf, pos).unwrap().to_vec().into_iter())
+        .collect::<Vec<u8>>()
 }

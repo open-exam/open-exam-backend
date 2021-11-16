@@ -38,7 +38,14 @@ pub struct Notification {
 }
 
 lazy_static! {
-    static ref JWT_PUBLIC_KEY: Vec<u8> = base64::decode(std::env::var("jwt_public_key").ok().unwrap().as_bytes().to_vec()).unwrap();
+    static ref JWT_PUBLIC_KEY: Vec<u8> = base64::decode(
+        std::env::var("jwt_public_key")
+            .ok()
+            .unwrap()
+            .as_bytes()
+            .to_vec()
+    )
+    .unwrap();
     static ref MODE: &'static str = shared_rs::shared::mode();
 }
 
