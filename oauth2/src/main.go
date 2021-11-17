@@ -353,7 +353,6 @@ func getToken(ctx *gin.Context) {
 	}
 }
 
-
 func refresh(ctx *gin.Context) {
 	var (
 		refreshToken = ctx.Query("refresh_token")
@@ -409,7 +408,7 @@ func refresh(ctx *gin.Context) {
 				return
 			}
 
-			err = setTokens(ctx, claims["user"].(string), &tokenSet{ refresh: refreshJWT, access: accessJWT})
+			err = setTokens(ctx, claims["user"].(string), &tokenSet{refresh: refreshJWT, access: accessJWT})
 			if err != nil {
 				ctx.JSON(500, errServiceConnection)
 				return
