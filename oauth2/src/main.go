@@ -79,6 +79,8 @@ func main() {
 
 	router.GET("/authorize", authorize)
 	router.GET("/token", getToken)
+	router.GET("/logout", logout)
+	router.GET("/refresh", refresh)
 
 	if err := router.Run(listenAddr); err != nil {
 		log.Fatalf("failed to start oauth2 server: %v", err)
@@ -219,11 +221,11 @@ func authorize(ctx *gin.Context) {
 
 func logout(ctx *gin.Context) {
 	var (
-		code = ctx.Query("code")
+		idToken = ctx.Query("id_token")
 	)
 
-	if len(code) > 0 && len(code) < 1024 {
-		tok, err := jwt.Parse(code, func(jwtToken *jwt.Token) (interface{}, error) {
+	if len(idToken) > 0 && len(idToken) < 1024 {
+		tok, err := jwt.Parse(idToken, func(jwtToken *jwt.Token) (interface{}, error) {
 			if _, ok := jwtToken.Method.(*jwt.SigningMethodRSA); !ok {
 				return nil, fmt.Errorf("unexpected method: %s", jwtToken.Header["alg"])
 			}
@@ -346,6 +348,83 @@ func getToken(ctx *gin.Context) {
 		ctx.JSON(400, gin.H{
 			"error":             "invalid_request",
 			"error_description": "invalid code",
+		})
+		return
+	}
+}
+
+
+func refresh(ctx *gin.Context) {
+	var (
+		refreshToken = ctx.Query("refresh_token")
+	)
+
+	if len(refreshToken) > 0 && len(refreshToken) < 1024 {
+		tok, err := jwt.Parse(refreshToken, func(jwtToken *jwt.Token) (interface{}, error) {
+			if _, ok := jwtToken.Method.(*jwt.SigningMethodRSA); !ok {
+				return nil, fmt.Errorf("unexpected method: %s", jwtToken.Header["alg"])
+			}
+			return jwtPublicKey, nil
+		})
+		if err != nil {
+			ctx.JSON(500, gin.H{
+				"error":             "invalid_request",
+				"error_description": "malformed jwt",
+			})
+			return
+		}
+		if _, ok := tok.Claims.(jwt.Claims); !ok && !tok.Valid {
+			ctx.JSON(400, errBadJWT)
+			return
+		}
+		claims, ok := tok.Claims.(jwt.MapClaims)
+		if ok && tok.Valid {
+			if claims.Valid() != nil {
+				ctx.JSON(400, errBadJWT)
+				return
+			}
+			val, err := redisCluster.LRange(ctx, claims["user"].(string), 0, -1).Result()
+			if err != nil {
+				ctx.JSON(400, errBadJWT)
+			}
+			idJWT, err := createJWT(claims["user"].(string), 300, val[1], "id", map[string]string{})
+			if err != nil {
+				ctx.JSON(500, errJWTCreation)
+				return
+			}
+			refreshJWT, err := createJWT(claims["user"].(string), 360, val[1], "refresh", map[string]string{})
+			if err != nil {
+				ctx.JSON(500, errJWTCreation)
+				return
+			}
+			accessJWT, err := createJWT(claims["user"].(string), 300, val[1], "access", map[string]string{})
+			if err != nil {
+				ctx.JSON(500, errJWTCreation)
+				return
+			}
+
+			_, errDel := redisCluster.Del(ctx, claims["user"].(string)).Result()
+			if errDel != nil {
+				ctx.JSON(400, errBadJWT)
+				return
+			}
+
+			err = setTokens(ctx, claims["user"].(string), &tokenSet{ refresh: refreshJWT, access: accessJWT})
+			if err != nil {
+				ctx.JSON(500, errServiceConnection)
+				return
+			}
+
+			ctx.JSON(200, gin.H{
+				"access_token":  accessJWT,
+				"refresh_token": refreshJWT,
+				"id_token":      idJWT,
+			})
+		}
+	} else {
+		ctx.JSON(400, gin.H{
+			"error":             "invalid_request",
+			"error_description": "invalid jwt",
 		})
 		return
 	}
