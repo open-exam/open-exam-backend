@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+option go_package = "github.com/open-exam/open-exam-backend/question-service/grpc-question-service;grpc_question_service";
+
+import "shared.proto";
+
+service PoolService {
+    rpc getQuestionFromPool(QuestionByPoolId) returns (Question);
+}
+
+message QuestionByPoolId {
+    uint64 poolId = 1;
+    uint64 questionId = 2;
+}
+
+service QuestionService {
+    rpc getQuestionById(QuestionById) returns (Question);
+    rpc updateQuestion(QuestionDetails) returns (StandardStatusResponse);
+}
+
+message QuestionById {
+    uint64 questionId = 1;
+}
+
+message Question {
+    uint64 pluginId = 1;
+    string title = 2;
+    string displayData = 3;
+    string files = 4;
+}
+
+message QuestionDetails {
+    uint64 questionId = 1;
+    Question data = 2;
+}
