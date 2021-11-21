@@ -24,25 +24,25 @@ import (
 var (
 	errInvalidHash         = errors.New("the encoded hash is not in the correct format")
 	errIncompatibleVersion = errors.New("incompatible version of argon2")
-	mode = "prod"
-	errServiceConnection = gin.H {
-		"error": "server_error",
+	mode                   = "prod"
+	errServiceConnection   = gin.H{
+		"error":             "server_error",
 		"error_description": "could not connect to internal service",
 	}
-	errJWTCreation = gin.H {
-		"error": "server_error",
+	errJWTCreation = gin.H{
+		"error":             "server_error",
 		"error_description": "an error occurred while creating JWTs",
 	}
-	errBadJWT = gin.H {
-		"error": "access_denied",
+	errBadJWT = gin.H{
+		"error":             "access_denied",
 		"error_description": "invalid code",
 	}
-	clientIds   = []string {"api", "exam"}
+	clientIds          = []string{"api", "exam"}
 	defaultRedirectUri string
-	userService      string
-	jwtPrivateKey *rsa.PrivateKey
-	jwtPublicKey *rsa.PublicKey
-	redisCluster *redis.ClusterClient
+	userService        string
+	jwtPrivateKey      *rsa.PrivateKey
+	jwtPublicKey       *rsa.PublicKey
+	redisCluster       *redis.ClusterClient
 )
 
 type params struct {
@@ -54,8 +54,8 @@ type params struct {
 }
 
 type tokenSet struct {
-	id string
-	access string
+	id      string
+	access  string
 	refresh string
 }
 
@@ -111,43 +111,43 @@ func validateOptions() {
 	redisPassword := os.Getenv("redis_pass")
 
 	redisCluster = redis.NewClusterClient(&redis.ClusterOptions{
-		Addrs: redisAddrs,
+		Addrs:    redisAddrs,
 		Password: redisPassword,
 	})
 }
 
 func authorize(ctx *gin.Context) {
 	var (
-		responseType = ctx.Query("response_type")
-		clientId = ctx.Query("client_id")
-		redirectUri = ctx.DefaultQuery("redirect_uri", defaultRedirectUri)
-		scope = ctx.Query("scope")
-		state = ctx.Query("state")
-		username = ctx.Query("username")
-		passwd = ctx.Query("password")
-		codeChallenge = ctx.Query("code_challenge")
+		responseType        = ctx.Query("response_type")
+		clientId            = ctx.Query("client_id")
+		redirectUri         = ctx.DefaultQuery("redirect_uri", defaultRedirectUri)
+		scope               = ctx.Query("scope")
+		state               = ctx.Query("state")
+		username            = ctx.Query("username")
+		passwd              = ctx.Query("password")
+		codeChallenge       = ctx.Query("code_challenge")
 		codeChallengeMethod = ctx.Query("code_challenge_method")
-		responseMethod = ctx.DefaultQuery("response_method", "redirect")
+		responseMethod      = ctx.DefaultQuery("response_method", "redirect")
 	)
 
 	if responseType != "code" {
-		ctx.JSON(400, gin.H {
-			"error": "invalid_request",
+		ctx.JSON(400, gin.H{
+			"error":             "invalid_request",
 			"error_description": "invalid response_type",
 		})
 		return
 	}
 
 	if codeChallengeMethod != "S256" {
-		ctx.JSON(400, gin.H {
-			"error": "invalid_request",
+		ctx.JSON(400, gin.H{
+			"error":             "invalid_request",
 			"error_description": "invalid code_challenge_method",
 		})
 		return
 	}
 
 	if util.IsInList(clientId, &clientIds) == -1 {
-		ctx.JSON(400, gin.H {
+		ctx.JSON(400, gin.H{
 			"error": "unauthorized_client",
 		})
 		return
@@ -158,7 +158,7 @@ func authorize(ctx *gin.Context) {
 		client := pb.NewUserServiceClient(conn)
 
 		response, err := client.FindOne(context.Background(), &pb.FindOneRequest{
-			Email: username,
+			Email:    username,
 			Password: true,
 		})
 
@@ -170,21 +170,21 @@ func authorize(ctx *gin.Context) {
 		}
 
 		if len(response.Password) == 0 {
-			ctx.JSON(400, gin.H {
-				"error": "access_denied",
+			ctx.JSON(400, gin.H{
+				"error":             "access_denied",
 				"error_description": "404; the user does not exist",
 			})
 			return
 		} else {
 			if verifyHash(passwd, response.Password) {
-				genJwt, err := createJWT(response.Id, 30, scope, "authorize", map[string]string {})
+				genJwt, err := createJWT(response.Id, 30, scope, "authorize", map[string]string{})
 				if err != nil {
 					ctx.JSON(500, errJWTCreation)
 					return
 				}
 
 				res := redisCluster.LPush(ctx, response.Id, codeChallenge, scope)
-				redisCluster.Expire(ctx, response.Id, time.Second * 30)
+				redisCluster.Expire(ctx, response.Id, time.Second*30)
 				if res.Err() != nil {
 					fmt.Println(res.Err())
 					ctx.JSON(500, errServiceConnection)
@@ -192,25 +192,25 @@ func authorize(ctx *gin.Context) {
 				}
 
 				if responseMethod == "redirect" {
-					ctx.Redirect(302, redirectUri + "?code=" + url.QueryEscape(genJwt) + "&state=" + url.QueryEscape(state))
+					ctx.Redirect(302, redirectUri+"?code="+url.QueryEscape(genJwt)+"&state="+url.QueryEscape(state))
 				} else {
-					ctx.JSON(200, gin.H {
-						"code": genJwt,
+					ctx.JSON(200, gin.H{
+						"code":  genJwt,
 						"state": state,
 					})
 					return
 				}
 			} else {
 				ctx.JSON(400, gin.H{
-					"error": "access_denied",
+					"error":             "access_denied",
 					"error_description": "invalid credentials",
 				})
 				return
 			}
 		}
 	} else {
-		ctx.JSON(400, gin.H {
-			"error": "invalid_request",
+		ctx.JSON(400, gin.H{
+			"error":             "invalid_request",
 			"error_description": "invalid parameters",
 		})
 		return
@@ -219,7 +219,7 @@ func authorize(ctx *gin.Context) {
 
 func getToken(ctx *gin.Context) {
 	var (
-		code = ctx.Query("code")
+		code         = ctx.Query("code")
 		codeVerifier = ctx.Query("code_verifier")
 	)
 
@@ -232,8 +232,8 @@ func getToken(ctx *gin.Context) {
 		})
 
 		if err != nil {
-			ctx.JSON(500, gin.H {
-				"error": "invalid_request",
+			ctx.JSON(500, gin.H{
+				"error":             "invalid_request",
 				"error_description": "malformed code",
 			})
 			return
@@ -260,24 +260,24 @@ func getToken(ctx *gin.Context) {
 				ctx.JSON(400, errBadJWT)
 			}
 			if util.GetSHA256([]byte(codeVerifier)) != val[1] {
-				ctx.JSON(400, gin.H {
-					"error": "access_denied",
+				ctx.JSON(400, gin.H{
+					"error":             "access_denied",
 					"error_description": "failed PKCE",
 				})
 				return
 			}
 
-			idJWT, err := createJWT(claims["user"].(string), 300, val[1], "id", map[string]string {});
+			idJWT, err := createJWT(claims["user"].(string), 300, val[1], "id", map[string]string{})
 			if err != nil {
 				ctx.JSON(500, errJWTCreation)
 				return
 			}
-			refreshJWT, err := createJWT(claims["user"].(string), 360, val[1], "refresh", map[string]string {});
+			refreshJWT, err := createJWT(claims["user"].(string), 360, val[1], "refresh", map[string]string{})
 			if err != nil {
 				ctx.JSON(500, errJWTCreation)
 				return
 			}
-			accessJWT, err := createJWT(claims["user"].(string), 300, val[1], "access", map[string]string {});
+			accessJWT, err := createJWT(claims["user"].(string), 300, val[1], "access", map[string]string{})
 			if err != nil {
 				ctx.JSON(500, errJWTCreation)
 				return
@@ -289,15 +289,15 @@ func getToken(ctx *gin.Context) {
 				return
 			}
 
-			ctx.JSON(200, gin.H {
-				"access_token": accessJWT,
+			ctx.JSON(200, gin.H{
+				"access_token":  accessJWT,
 				"refresh_token": refreshJWT,
-				"id_token": idJWT,
+				"id_token":      idJWT,
 			})
 		}
 	} else {
-		ctx.JSON(400, gin.H {
-			"error": "invalid_request",
+		ctx.JSON(400, gin.H{
+			"error":             "invalid_request",
 			"error_description": "invalid code",
 		})
 		return
@@ -305,15 +305,15 @@ func getToken(ctx *gin.Context) {
 }
 
 func setTokens(ctx *gin.Context, userId string, tokens *tokenSet) error {
-	res := redisCluster.SetEX(ctx, userId, tokens.id, time.Minute * 5)
+	res := redisCluster.SetEX(ctx, userId, tokens.id, time.Minute*5)
 	if res.Err() != nil {
 		return res.Err()
 	}
-	res = redisCluster.SetEX(ctx, userId, tokens.access, time.Minute * 5)
+	res = redisCluster.SetEX(ctx, userId, tokens.access, time.Minute*5)
 	if res.Err() != nil {
 		return res.Err()
 	}
-	res = redisCluster.SetEX(ctx, userId, tokens.refresh, time.Minute * 6)
+	res = redisCluster.SetEX(ctx, userId, tokens.refresh, time.Minute*6)
 	if res.Err() != nil {
 		return res.Err()
 	}

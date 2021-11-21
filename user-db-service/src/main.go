@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	db *sql.DB
-	mode = "prod"
+	db                   *sql.DB
+	mode                 = "prod"
 	standardPasswordSize uint32
 )
 

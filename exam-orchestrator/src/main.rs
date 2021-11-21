@@ -1,9 +1,19 @@
-use std::{net::SocketAddr, sync::Arc, thread};
 use jsonwebtoken::DecodingKey;
-use net2::{TcpBuilder, unix::UnixTcpBuilderExt};
-use redis::{Commands, RedisResult, Value, cluster::ClusterClient, streams::{StreamReadOptions, StreamReadReply}};
+use net2::{unix::UnixTcpBuilderExt, TcpBuilder};
+use redis::{
+    cluster::ClusterClient,
+    streams::{StreamReadOptions, StreamReadReply},
+    Commands, RedisResult, Value,
+};
 use serde::{Deserialize, Serialize};
-use tokio::{net::{TcpListener, TcpStream}, sync::{Mutex, broadcast::{self, Receiver}}};
+use std::{net::SocketAddr, sync::Arc, thread};
+use tokio::{
+    net::{TcpListener, TcpStream},
+    sync::{
+        broadcast::{self, Receiver},
+        Mutex,
+    },
+};
 use xactor::*;
 
 mod client_handler;
@@ -18,79 +28,62 @@ struct Claims {
     iss: String,
     nbf: usize,
     sub: String,
-    user: String
+    user: String,
 }
 
 #[derive(Clone)]
-struct Notification {
-    user_id: String,
-    data: String
+pub struct Notification {
+    pub user_id: String,
+    pub data: String,
 }
 
 lazy_static! {
-    static ref JWT_PUBLIC_KEY: Vec<u8> = {
-        std::env::var("jwt_public_key").ok().unwrap().as_bytes().to_vec()
-    };
+    static ref JWT_PUBLIC_KEY: Vec<u8> = base64::decode(
+        std::env::var("jwt_public_key")
+            .ok()
+            .unwrap()
+            .as_bytes()
+            .to_vec()
+    )
+    .unwrap();
+    static ref MODE: &'static str = shared_rs::shared::mode();
 }
 
 fn main() {
-    let mut found = false;
-    for (i, arg) in std::env::args().enumerate() {
-        if arg.trim() == "--help" {
-            println!("Usage: exam-orchestrator\n\t[-dev] run in dev mode\n\t[-env] the .env file to be used");
-            std::process::exit(0);
-        }
-
-        if arg.trim() == "-dev" {
-            std::env::set_var("RUST_LOG", "debug");
-        }
-
-        if arg.trim() == "-env" {
-            let args: Vec<String> = std::env::args().collect();
-
-            if i + 1 >= args.len() {
-                println!("-env path not provided");
-                std::process::exit(1);
-            }
-            else {
-                dotenv::from_path(args[i + 1].clone()).ok();
-                found = true;
-            }
-        }
-    }
-    
-    if !found {
-        dotenv::dotenv().ok();
-    }
+    lazy_static::initialize(&MODE);
+    lazy_static::initialize(&JWT_PUBLIC_KEY);
 
     let addr: std::net::SocketAddr = std::env::var("listen_addr").ok().unwrap().parse().unwrap();
     let mut threads = Vec::new();
     let (tx, rx) = broadcast::channel::<Notification>(16);
 
     let rsa_pub_key = DecodingKey::from_rsa_pem(&JWT_PUBLIC_KEY[..]).unwrap();
-    
+
     for i in 0..num_cpus::get() {
         let tx = tx.clone();
         let rsa_copy = rsa_pub_key.clone();
         threads.push(thread::spawn(move || {
             println!("Starting worker thread {}", i);
 
-            let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
+            let rt = tokio::runtime::Builder::new_multi_thread()
+                .enable_all()
+                .build()
+                .unwrap();
 
             rt.block_on(async move {
                 let listener = {
                     let builder = TcpBuilder::new_v4().unwrap();
                     builder.reuse_address(true).unwrap();
-					builder.reuse_port(true).unwrap();
-					builder.bind(addr).unwrap();
-					builder.listen(2048).unwrap()
+                    builder.reuse_port(true).unwrap();
+                    builder.bind(addr).unwrap();
+                    builder.listen(2048).unwrap()
                 };
 
                 let listener = TcpListener::from_std(listener).unwrap();
 
                 loop {
                     if let Ok((socket, addr)) = listener.accept().await {
-                        tokio::spawn(process(socket, i, addr,  tx.subscribe(), rsa_copy.clone()));
+                        tokio::spawn(process(socket, i, addr, tx.subscribe(), rsa_copy.clone()));
                     }
                 }
             });
@@ -100,38 +93,47 @@ fn main() {
     threads.push(thread::spawn(move || {
         println!("Starting redis thread");
 
-        let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
+        let rt = tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .unwrap();
 
         rt.block_on(async move {
             let nodes_var = std::env::var("redis_addr").ok().unwrap();
             let node_name = std::env::var("node_name").unwrap();
             let redis_password = std::env::var("redis_password").unwrap();
-            let nodes: Vec<String> = nodes_var.split(",").map(|e| format!("redis://:{}@{}", redis_password, e.trim())).collect();
+            let nodes: Vec<String> = nodes_var
+                .split(",")
+                .map(|e| format!("redis://:{}@{}", redis_password, e.trim()))
+                .collect();
 
-            let mut conn = ClusterClient::open(nodes).unwrap().get_connection().unwrap();
+            let mut conn = ClusterClient::open(nodes)
+                .unwrap()
+                .get_connection()
+                .unwrap();
             let opts = StreamReadOptions::default().block(1000);
 
             let mut last_id = [String::from("0")];
             loop {
-                let res: RedisResult<StreamReadReply> = conn.xread_options(&[node_name.as_str()], &last_id, &opts);
+                let res: RedisResult<StreamReadReply> =
+                    conn.xread_options(&[node_name.as_str()], &last_id, &opts);
                 if let Ok(items) = res {
                     items.keys.iter().for_each(|item| {
                         item.ids.iter().for_each(|ele| {
                             let mut user_id = "".to_string();
                             let mut notif_data = "".to_string();
-                            ele.map.iter().for_each(|(key, value)| {
-                                match value {
-                                    Value::Data(data) => {
-                                        println!("{} : {} : {}", ele.id, key, String::from_utf8(data.to_vec()).unwrap());
-                                        if key == "user_id" {
-                                            user_id = String::from_utf8(data.to_vec()).unwrap();
-                                        }
-                                        if key == "data" {
-                                            notif_data = String::from_utf8(data.to_vec()).unwrap();
-                                        }
-                                    },
-                                    _ => {}
+                            ele.map.iter().for_each(|(key, value)| match value {
+                                Value::Data(data) => {
+                                    if key == "user_id" {
+                                        user_id = String::from_utf8(data.to_vec()).unwrap();
+                                        return;
+                                    }
+                                    if key == "data" {
+                                        notif_data = String::from_utf8(data.to_vec()).unwrap();
+                                        return;
+                                    }
                                 }
+                                _ => {}
                             });
 
                             if user_id.len() > 0 {
@@ -146,11 +148,14 @@ fn main() {
                     if items.keys.len() > 0 {
                         let len_item_keys = items.keys.len();
                         let len_ele_ids = items.keys[len_item_keys - 1].ids.len();
-                        last_id[0] = String::from(items.keys[len_item_keys - 1].ids[len_ele_ids - 1].id.clone());
+                        last_id[0] = String::from(
+                            items.keys[len_item_keys - 1].ids[len_ele_ids - 1]
+                                .id
+                                .clone(),
+                        );
                     }
                 }
             }
-
         });
     }));
 
@@ -160,35 +165,35 @@ fn main() {
     }
 }
 
-async fn process(socket: TcpStream, worker_id: usize, addr: SocketAddr, mut rx: Receiver<Notification>, rsa_pub_key: DecodingKey<'_>) {
+async fn process(
+    socket: TcpStream,
+    worker_id: usize,
+    addr: SocketAddr,
+    mut rx: Receiver<Notification>,
+    rsa_pub_key: DecodingKey<'_>,
+) {
     let socket = Arc::new(Mutex::new(socket));
-    let ctx = client_handler::Client {
-        id: worker_id,
-        stream: socket.clone(),
-        key: None
-    };
+    let ctx = client_handler::Client::new(worker_id, socket.clone(), None);
     let addr = ctx.start().await.unwrap();
     let user_id: String;
-    
-    if let Ok(init) = addr.call(client_handler::InitClient{}).await {
+
+    if let Ok(init) = addr.call(client_handler::InitClient {}).await {
         if init.0 != 200 {
             send_status(socket.clone(), init.0, init.1.as_bytes());
             return;
         }
 
         {
-            use jsonwebtoken::{decode, DecodingKey, Validation, Algorithm};
+            use jsonwebtoken::{decode, Algorithm, Validation};
             let token = decode::<Claims>(&init.1, &rsa_pub_key, &Validation::new(Algorithm::RS256));
             if let Ok(token_data) = token {
                 user_id = token_data.claims.user;
-            }
-            else {
+            } else {
                 send_status(socket.clone(), 400, b"Invalid login token");
-                return
+                return;
             }
         }
-    }
-    else {
+    } else {
         send_status(socket.clone(), 500, "An unknown error occurred".as_bytes());
         return;
     }
@@ -206,7 +211,7 @@ async fn process(socket: TcpStream, worker_id: usize, addr: SocketAddr, mut rx: 
                 let msg = result.unwrap();
 
                 if msg.user_id == user_id {
-                    addr.call(client_handler::Notification(msg.data)).await;
+                    // addr.call(client_handler::Notification(msg.data)).await;
                 }
             }
         }
@@ -215,7 +220,7 @@ async fn process(socket: TcpStream, worker_id: usize, addr: SocketAddr, mut rx: 
 
 async fn send_status(stream: Arc<Mutex<TcpStream>>, status: u32, data: &[u8]) {
     {
-        use byteorder::{WriteBytesExt, BigEndian};
+        use byteorder::{BigEndian, WriteBytesExt};
 
         let mut buf = Vec::new();
         buf.write_u32::<BigEndian>(status);

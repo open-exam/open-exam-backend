@@ -13,12 +13,12 @@ import (
 )
 
 var (
-	db *sql.DB
-	mode = "prod"
-	pluginDbService string
-	registryHost string
-	registryPort string
-	registryLogin string
+	db               *sql.DB
+	mode             = "prod"
+	pluginDbService  string
+	registryHost     string
+	registryPort     string
+	registryLogin    string
 	registryPassword string
 )
 
@@ -46,7 +46,7 @@ func validateOptions() {
 }
 
 func podmanLogin() {
-	cmd := exec.Command("podman", "login", registryHost + ":" + registryPort)
+	cmd := exec.Command("podman", "login", registryHost+":"+registryPort)
 	buffer := bytes.Buffer{}
 	buffer.Write([]byte(registryLogin + "\n" + registryPassword + "\n"))
 	cmd.Stdin = &buffer

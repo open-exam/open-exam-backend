@@ -12,7 +12,7 @@ func getUser(mode int, data string, getPass bool) (*pb.User, error) {
 	var (
 		user = &pb.User{}
 		rows *sql.Rows
-		err error
+		err  error
 	)
 
 	if mode == 0 {
@@ -48,7 +48,7 @@ func getUser(mode int, data string, getPass bool) (*pb.User, error) {
 func generateFromPassword(password string) (encodedHash string, err error) {
 	salt := util.GenerateRandomBytes(16)
 
-	hash := argon2.IDKey([]byte(password), salt, 3, 64 * 1024, 2, 32)
+	hash := argon2.IDKey([]byte(password), salt, 3, 64*1024, 2, 32)
 
 	b64Salt := base64.RawStdEncoding.EncodeToString(salt)
 	b64Hash := base64.RawStdEncoding.EncodeToString(hash)
@@ -61,7 +61,7 @@ func generatePassword(len uint32) string {
 	res := ""
 
 	for i := uint32(0); i < len; i++ {
-		res += string(charSet[util.GenerateRandomBytes(1)[0] % 62])
+		res += string(charSet[util.GenerateRandomBytes(1)[0]%62])
 	}
 
 	return res

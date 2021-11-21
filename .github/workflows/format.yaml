@@ -1,0 +1,28 @@
+name: Format
+
+on: [push]
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v2
+      - name: Install go
+        uses: actions/setup-go@v2
+      - name: Install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt
+      - name: Run gofmt
+        run: gofmt -w *
+        continue-on-error: true
+      - name: rustfmt
+        run: cargo fmt
+        continue-on-error: true
+      - name: Auto commit
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: gofmt
+          branch: ${{ github.head_ref }}

@@ -25,15 +25,15 @@ type ExamTemplateServer struct {
 }
 
 func NewExamClientAccessServer() (*ExamClientAccessServer, error) {
-	return &ExamClientAccessServer {}, nil
+	return &ExamClientAccessServer{}, nil
 }
 
 func NewExamServiceServer() (*ExamServiceServer, error) {
-	return &ExamServiceServer {}, nil
+	return &ExamServiceServer{}, nil
 }
 
 func NewExamTemplateServer() (*ExamTemplateServer, error) {
-	return &ExamTemplateServer {}, nil
+	return &ExamTemplateServer{}, nil
 }
 
 func (s *ExamClientAccessServer) CheckValid(ctx context.Context, req *pb.CheckValidRequest) (*pb.CheckValidResponse, error) {
@@ -63,23 +63,23 @@ func (s *ExamServiceServer) CreateExam(ctx context.Context, req *pb.CreateExamRe
 		if len(req.Name) == 0 {
 			return nil, errors.New("name not given")
 		}
-	
+
 		if req.StartTime == 0 {
 			return nil, errors.New("start time not given")
 		}
-	
+
 		if req.EndTime == 0 {
 			return nil, errors.New("end time not given")
 		}
-	
+
 		if req.Duration == 0 {
 			return nil, errors.New("duration not given")
 		}
-	
+
 		if len(req.CreatedBy) == 0 {
 			return nil, errors.New("created by not given")
 		}
-	
+
 		if req.Organization == 0 {
 			return nil, errors.New("organization not given")
 		}
@@ -107,7 +107,7 @@ func (s *ExamServiceServer) CreateExam(ctx context.Context, req *pb.CreateExamRe
 		}
 	}
 
-	return &sharedPb.StandardIdResponse {
+	return &sharedPb.StandardIdResponse{
 		IdString: Id,
 	}, nil
 }
@@ -117,12 +117,12 @@ func (s *ExamTemplateServer) CreateTemplate(ctx context.Context, req *pb.CreateE
 		if len(req.Name) == 0 {
 			return nil, errors.New("name not given")
 		}
-	
+
 		if len(req.Scopes) == 0 {
 			return nil, errors.New("scopes not given")
 		}
 	}
-	
+
 	Id := hex.EncodeToString(util.GenerateRandomBytes(32))
 	_, err := db.Exec("INSERT INTO exam_template VALUES (?, ?)", Id, req.Name)
 	if err != nil {
@@ -136,7 +136,7 @@ func (s *ExamTemplateServer) CreateTemplate(ctx context.Context, req *pb.CreateE
 		}
 	}
 
-	return &sharedPb.StandardIdResponse {
+	return &sharedPb.StandardIdResponse{
 		IdString: Id,
 	}, nil
 }

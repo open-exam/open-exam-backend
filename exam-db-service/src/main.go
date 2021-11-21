@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	db *sql.DB
+	db   *sql.DB
 	mode = "prod"
 )
 

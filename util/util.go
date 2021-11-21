@@ -63,7 +63,7 @@ func SplitAndParse(data string) []string {
 	})
 }
 
-func ReadCSV(buf []byte) ([][]string, error){
+func ReadCSV(buf []byte) ([][]string, error) {
 	r := csv.NewReader(bytes.NewReader(buf))
 	return r.ReadAll()
 }
@@ -85,12 +85,12 @@ func SqlArrayJoin(items []string) (string, []interface{}) {
 	for i, id := range items {
 		args[i] = id
 	}
-	return strings.Repeat(", ?", len(args) - 1), args
+	return strings.Repeat(", ?", len(args)-1), args
 }
 
 func Prepend(x []interface{}, y interface{}) []interface{} {
-    x = append(x, "")
-    copy(x[1:], x)
-    x[0] = y
-    return x
+	x = append(x, "")
+	copy(x[1:], x)
+	x[0] = y
+	return x
 }
