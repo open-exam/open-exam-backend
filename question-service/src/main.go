@@ -2,17 +2,17 @@ package src
 
 import (
 	"database/sql"
+	"github.com/go-redis/redis/v8"
 	pb "github.com/open-exam/open-exam-backend/question-service/grpc-question-service"
 	"github.com/open-exam/open-exam-backend/shared"
-	"github.com/go-redis/redis/v8"
 	"github.com/open-exam/open-exam-backend/util"
 	"google.golang.org/grpc"
 	"os"
 )
 
 var (
-	mode string
-	db *sql.DB
+	mode         string
+	db           *sql.DB
 	redisCluster *redis.ClusterClient
 )
 
@@ -35,7 +35,7 @@ func validateOptions() {
 	redisPassword := os.Getenv("redis_pass")
 
 	redisCluster = redis.NewClusterClient(&redis.ClusterOptions{
-		Addrs: redisAddrs,
+		Addrs:    redisAddrs,
 		Password: redisPassword,
 	})
 }
