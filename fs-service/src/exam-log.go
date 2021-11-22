@@ -52,7 +52,7 @@ func appendLog(ctx *gin.Context) {
 			return
 		}
 
-		client := relationPb.NewRelationServiceClient(conn)
+		client := relationPb.NewRelationServiceClient(conn) //rbac
 		res, err := GetOrgFromExam(client, log.ExamId)
 
 		if err != nil {
@@ -60,7 +60,7 @@ func appendLog(ctx *gin.Context) {
 			return
 		}
 
-		rescanAccessExam, err := client.CanAccessExam(context.Background(), &relationPb.CanAccessExamRequest{
+		rescanAccessExam, err := client.CanAccessExam(context.Background(), &relationPb.CanAccessExamRequest{ //canPerformOperation
 			UserId:     log.UserId,
 			ExamId:     log.ExamId,
 			VerifyTime: true,
