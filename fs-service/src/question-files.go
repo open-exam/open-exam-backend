@@ -2,19 +2,19 @@ package main
 
 import (
 	"context"
-	"os"
-	"strconv"
-	questionPb "github.com/open-exam/open-exam-backend/question-service/grpc-question-service"
 	"github.com/gin-gonic/gin"
+	questionPb "github.com/open-exam/open-exam-backend/question-service/grpc-question-service"
 	"github.com/open-exam/open-exam-backend/rbac-service/grpc-rbac-service"
 	"github.com/open-exam/open-exam-backend/shared"
+	"os"
+	"strconv"
 )
 
 type Question struct {
-	pluginId    uint64  `json:"start_time" binding:"required"`
-	displayData      string  `json:"end_time" binding:"required"`
-	title     string  `json:"duration" binding:"required"`
-	files    string  `json:"template" binding:"required"`
+	pluginId    uint64 `json:"start_time" binding:"required"`
+	displayData string `json:"end_time" binding:"required"`
+	title       string `json:"duration" binding:"required"`
+	files       string `json:"template" binding:"required"`
 }
 
 func InitQuestionFiles(router *gin.RouterGroup) {
@@ -39,20 +39,20 @@ func createQuestionFile(ctx *gin.Context) {
 	files := form.File["question"]
 	orgIds := form.Value["org_id"]
 	if len(files) == 0 {
-		ctx.AbortWithStatusJSON(400, gin.H {
+		ctx.AbortWithStatusJSON(400, gin.H{
 			"error": "no question file",
 		})
 		return
 	}
 	if len(orgIds) == 0 || len(orgIds[0]) == 0 {
-		ctx.AbortWithStatusJSON(400, gin.H {
+		ctx.AbortWithStatusJSON(400, gin.H{
 			"error": "no org_id",
 		})
 		return
 	}
 	_, err = strconv.ParseUint(orgIds[0], 10, 64)
 	if err != nil {
-		ctx.AbortWithStatusJSON(400, gin.H {
+		ctx.AbortWithStatusJSON(400, gin.H{
 			"error": "Invalid Organization ID",
 		})
 		return
@@ -60,13 +60,13 @@ func createQuestionFile(ctx *gin.Context) {
 	buf := make([]byte, files[0].Size)
 	file, err := files[0].Open()
 	if err != nil {
-		ctx.AbortWithStatusJSON(400, gin.H {
+		ctx.AbortWithStatusJSON(400, gin.H{
 			"error": shared.GinErrors.UnknownError,
 		})
 	}
 	n, err := file.Read(buf)
 	if err != nil {
-		ctx.AbortWithStatusJSON(400, gin.H {
+		ctx.AbortWithStatusJSON(400, gin.H{
 			"error": shared.GinErrors.UnknownError,
 		})
 	}
@@ -86,8 +86,8 @@ func createQuestionFile(ctx *gin.Context) {
 
 	questionServiceClient := questionPb.NewQuestionServiceClient(conn)
 	res, err = questionServiceClient.updateQuestion(context.Background(), &questionPb.QuestionDetails{
-		questionId:     question_id,
-		data: question,
+		questionId: question_id,
+		data:       question,
 	})
 	if err != nil {
 		ctx.AbortWithStatusJSON(500, shared.GinErrors.UnknownError)
@@ -97,5 +97,5 @@ func createQuestionFile(ctx *gin.Context) {
 }
 
 func readQuestionFile(ctx *gin.Context) {
-//make a call to rbac only if it is a student
+	//make a call to rbac only if it is a student
 }
