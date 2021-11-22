@@ -64,7 +64,7 @@ func createQuestionFile(ctx *gin.Context) {
 			"error": shared.GinErrors.UnknownError,
 		})
 	}
-	n, err := file.Read(buf)
+	_, err = file.Read(buf)
 	if err != nil {
 		ctx.AbortWithStatusJSON(400, gin.H{
 			"error": shared.GinErrors.UnknownError,
