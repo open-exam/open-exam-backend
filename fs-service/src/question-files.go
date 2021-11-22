@@ -24,7 +24,6 @@ func InitQuestionFiles(router *gin.RouterGroup) {
 }
 
 func createQuestionFile(ctx *gin.Context) {
-	// TODO: read rbac to ensure create rights are present
 	question := Question{}
 	var (
 		question_id = ctx.Query("question_id")
