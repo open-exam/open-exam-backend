@@ -32,49 +32,26 @@ struct Claims {
 }
 
 #[derive(Clone)]
-struct Notification {
-    user_id: String,
-    data: String,
+pub struct Notification {
+    pub user_id: String,
+    pub data: String,
 }
 
 lazy_static! {
-    static ref JWT_PUBLIC_KEY: Vec<u8> = {
+    static ref JWT_PUBLIC_KEY: Vec<u8> = base64::decode(
         std::env::var("jwt_public_key")
             .ok()
             .unwrap()
             .as_bytes()
             .to_vec()
-    };
+    )
+    .unwrap();
+    static ref MODE: &'static str = shared_rs::shared::mode();
 }
 
 fn main() {
-    let mut found = false;
-    for (i, arg) in std::env::args().enumerate() {
-        if arg.trim() == "--help" {
-            println!("Usage: exam-orchestrator\n\t[-dev] run in dev mode\n\t[-env] the .env file to be used");
-            std::process::exit(0);
-        }
-
-        if arg.trim() == "-dev" {
-            std::env::set_var("RUST_LOG", "debug");
-        }
-
-        if arg.trim() == "-env" {
-            let args: Vec<String> = std::env::args().collect();
-
-            if i + 1 >= args.len() {
-                println!("-env path not provided");
-                std::process::exit(1);
-            } else {
-                dotenv::from_path(args[i + 1].clone()).ok();
-                found = true;
-            }
-        }
-    }
-
-    if !found {
-        dotenv::dotenv().ok();
-    }
+    lazy_static::initialize(&MODE);
+    lazy_static::initialize(&JWT_PUBLIC_KEY);
 
     let addr: std::net::SocketAddr = std::env::var("listen_addr").ok().unwrap().parse().unwrap();
     let mut threads = Vec::new();
@@ -147,17 +124,13 @@ fn main() {
                             let mut notif_data = "".to_string();
                             ele.map.iter().for_each(|(key, value)| match value {
                                 Value::Data(data) => {
-                                    println!(
-                                        "{} : {} : {}",
-                                        ele.id,
-                                        key,
-                                        String::from_utf8(data.to_vec()).unwrap()
-                                    );
                                     if key == "user_id" {
                                         user_id = String::from_utf8(data.to_vec()).unwrap();
+                                        return;
                                     }
                                     if key == "data" {
                                         notif_data = String::from_utf8(data.to_vec()).unwrap();
+                                        return;
                                     }
                                 }
                                 _ => {}
@@ -200,11 +173,7 @@ async fn process(
     rsa_pub_key: DecodingKey<'_>,
 ) {
     let socket = Arc::new(Mutex::new(socket));
-    let ctx = client_handler::Client {
-        id: worker_id,
-        stream: socket.clone(),
-        key: None,
-    };
+    let ctx = client_handler::Client::new(worker_id, socket.clone(), None);
     let addr = ctx.start().await.unwrap();
     let user_id: String;
 
@@ -215,7 +184,7 @@ async fn process(
         }
 
         {
-            use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
+            use jsonwebtoken::{decode, Algorithm, Validation};
             let token = decode::<Claims>(&init.1, &rsa_pub_key, &Validation::new(Algorithm::RS256));
             if let Ok(token_data) = token {
                 user_id = token_data.claims.user;
@@ -242,7 +211,7 @@ async fn process(
                 let msg = result.unwrap();
 
                 if msg.user_id == user_id {
-                    addr.call(client_handler::Notification(msg.data)).await;
+                    // addr.call(client_handler::Notification(msg.data)).await;
                 }
             }
         }
