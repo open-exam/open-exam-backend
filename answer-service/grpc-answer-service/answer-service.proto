@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+option go_package = "github.com/open-exam/open-exam-backend/answer-service/grpc-answer-service;grpc_answer_service";
+
+import "shared.proto";
+
+service AnswerByQuestionId {
+
+}
